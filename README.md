@@ -1,16 +1,45 @@
 # BSI Cards - Installation Guide
 
+> **⚠️ Important:** The `vendor` folder is intentionally excluded from the repository (it's in `.gitignore`). This is standard practice as the vendor folder is large and can be regenerated from `composer.json`. You **must** run `composer install` after cloning or downloading the project.
+
 This guide explains how to install the project and set up the MySQL database, including cPanel steps for creating the database, database user, and password.
 
 ## Prerequisites
 
-- PHP and web server configured for Laravel
+- PHP >= 8.1 and web server configured for Laravel
 - MySQL or MariaDB available
+- Composer installed on your system
 - Access to your hosting file manager/SSH
 - cPanel access (for shared hosting)
 - Project files uploaded to your hosting account
 
-## 1) Upload the project
+## 1) Clone or download the project
+
+Clone from GitHub:
+
+```bash
+git clone https://github.com/nash81/bsicards-laravel-frontend.git
+cd bsicards-laravel-frontend
+```
+
+Or download and extract the project files.
+
+## 2) Install Composer dependencies
+
+The `vendor` folder is not included in the repository. You must install dependencies:
+
+```bash
+composer install
+```
+
+This will:
+- Read `composer.json` and `composer.lock`
+- Download and install all required PHP packages
+- Generate the `vendor` folder
+
+> **On shared hosting without SSH:** Upload the project, then use a web-based Composer installer or contact your host to run `composer install`.
+
+## 3) Upload the project
 
 Upload this project to your hosting path (for example `public_html` or a subfolder).
 
@@ -20,7 +49,7 @@ Make sure these paths exist:
 - SQL file: `install/bsicards.sql`
 - Installer page: `install/index.php`
 
-## 2) Create MySQL database and user in cPanel
+## 4) Create MySQL database and user in cPanel
 
 1. Log in to **cPanel**.
 2. Open **MySQL Databases**.
@@ -51,7 +80,7 @@ Examples:
 
 Use the **full prefixed values** in installation settings.
 
-## 3) Configure `.env`
+## 5) Configure `.env`
 
 If `.env` is missing, copy from `.env.example` first.
 
@@ -69,7 +98,7 @@ DB_PASSWORD=your_database_password
 
 > On many cPanel hosts, `DB_HOST` remains `localhost` or `127.0.0.1`. Use the value provided by your host.
 
-## 4) Run the web installer
+## 6) Run the web installer
 
 Open in browser:
 
@@ -89,7 +118,7 @@ The installer will:
 - Import `install/bsicards.sql`
 - Show clear errors if connection/import fails
 
-## 5) Finalize Laravel setup (if needed)
+## 7) Finalize Laravel setup (if needed)
 
 If you have shell access, run:
 
