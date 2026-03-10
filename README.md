@@ -114,7 +114,8 @@ If your host uses cron, configure Laravel scheduler (optional but recommended):
 ```bash
 * * * * * php /home/USERNAME/path-to-project/artisan schedule:run >> /dev/null 2>&1
 ```
-
+Admin Login: https://your-domain.com/admin
+username: cs@cards.bsigroup.tech Password: Abcd4321@
 ## Troubleshooting
 
 ### Database connection failed
