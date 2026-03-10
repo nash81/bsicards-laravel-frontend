@@ -3,7 +3,6 @@
 /assets/storage
 /storage/*.key
 /storage/logs/*.log
-/vendor
 .env
 .env.backup
 .phpunit.result.cache
