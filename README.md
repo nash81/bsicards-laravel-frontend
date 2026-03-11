@@ -147,6 +147,6 @@ After successful installation, restrict access to `install/index.php` (or remove
 
 ## Future roadmap
 
-- Add on Cards for Digital Mastercards
+- Add on Cards for Digital Mastercards (Completed)
 - Implementation of Laravel Livewire
 - Convert Project to use laravel SDK for BSI Cards API
