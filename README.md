@@ -145,3 +145,8 @@ php artisan optimize:clear
 
 After successful installation, restrict access to `install/index.php` (or remove/rename installer files) so it cannot be reused in production.
 
+## Future roadmap
+
+- Add on Cards for Digital Mastercards
+- Implementation of Laravel Livewire
+- Convert Project to use laravel SDK for BSI Cards API

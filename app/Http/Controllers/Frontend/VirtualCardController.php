@@ -1241,11 +1241,12 @@ class VirtualCardController extends Controller {
             $transaction = new Transaction();
             $transaction->user_id = $user->id;
             $transaction->amount = $totalamount;
-            $transaction->post_balance = $user->balance;
+            $transaction->final_amount = $totalamount;
             $transaction->charge = 00;
-            $transaction->trx_type = '-';
-            $transaction->details = 'Loaded Funds to Digital Mastercard ' . $request->cardid;
-            $transaction->trx = $trx;
+            $transaction->type = 'subtract';
+            $transaction->description = 'Loaded Funds to Digital Mastercard ' . $request->cardid;
+            $transaction->tnx = $trx;
+            $transaction->status = 'success';
             $transaction->save();
             notify()->success(__('Fund Load Request Successful - 24-48Hours'), 'Success');
 
@@ -1257,5 +1258,73 @@ class VirtualCardController extends Controller {
 
             return back();
         }
+    }
+
+    public function digitaladdoncard(Request $request) {
+        $this->validate($request, [
+            'cardid' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+        $general = GeneralSetting::first();
+        $fee = (float) $general->digifee;
+
+        if ($user->balance < $fee) {
+            notify()->error(__('Insufficient Balance'), 'Error');
+            return back();
+        }
+
+        $user->balance -= $fee;
+        $user->save();
+
+        $curl = curl_init();
+        $body = array(
+            'useremail' => $user->email,
+            'cardid' => $request->cardid,
+        );
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://cards.bsigroup.tech/api/createaddon',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode($body),
+            CURLOPT_HTTPHEADER => array(
+                'publickey: ' . $general->bsi_publickey,
+                'secretkey: ' . $general->bsi_secretkey,
+                'Content-Type: application/json',
+            ),
+        ));
+
+        $response = curl_exec($curl);
+        $hasCurlError = curl_errno($curl);
+        curl_close($curl);
+
+        $apiResponse = json_decode($response);
+        if (!$hasCurlError && isset($apiResponse->code) && (int) $apiResponse->code === 200) {
+            $transaction = new Transaction();
+            $transaction->user_id = $user->id;
+            $transaction->amount = $fee;
+            $transaction->final_amount = $fee;
+            $transaction->charge = 0;
+            $transaction->type = 'subtract';
+            $transaction->description = 'Addon card issuance fee - ' . $request->cardid;
+            $transaction->tnx = getTrx();
+            $transaction->status = 'success';
+            $transaction->save();
+
+            notify()->success(__('Addon card request submitted successfully'), 'Success');
+            return back();
+        }
+
+        $user->balance += $fee;
+        $user->save();
+
+        notify()->error(__('Addon card request failed. Your balance has been restored.'), 'Error');
+        return back();
     }
 }

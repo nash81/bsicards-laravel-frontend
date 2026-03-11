@@ -94,6 +94,7 @@ Route::group(['middleware' => ['auth', '2fa', 'isActive', setting('otp_verificat
     Route::post('/digitalnewvirtualcard', [VirtualCardController::class, 'digitalnewvirtualcard'])->name('digitalnewvirtualcard');
     Route::post('/digitalnewphysicalcard', [VirtualCardController::class, 'digitalnewphysicalcard'])->name('digitalnewphysicalcard');
     Route::post('/digitalloadfunds', [VirtualCardController::class, 'digitalloadfunds'])->name('digitalloadfunds');
+    Route::post('/digitaladdoncard', [VirtualCardController::class, 'digitaladdoncard'])->name('digitaladdoncard');
     Route::get('/approve3ds/{id}/{eventid}', [VirtualCardController::class, 'approve3ds'])->name('approve3ds');
     Route::get('/checkstatus/{id}', [VirtualCardController::class, 'checkstatus'])->name('checkstatus');
 

@@ -108,6 +108,11 @@
                                     @else
                                         <a href="{{ route('user.blockdigital',$virtualcards->data->cardid) }}" class="site-btn-sm red-btn" onclick="return confirm('{{ __('Are you sure you want to block the card?') }}')">{{ __('Block') }}</a>
                                     @endif
+                                    @if((int) data_get($virtualcards, 'data.isaddon', 0) === 0)
+                                        <button type="button" class="site-btn-sm primary-btn" data-bs-toggle="modal" data-bs-target="#addonCardModal">
+                                            <i class="fa fa-plus"></i> {{ __('Addon card') }}
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -122,6 +127,9 @@
                     <h3 class="title-small">{{ __('Card Transaction History') }}</h3>
                 </div>
                 <div class="site-card-body">
+                    @php
+                        $isAddonCard = (int) data_get($virtualcards, 'data.isaddon', 0) === 1;
+                    @endphp
                     <ul class="nav nav-tabs border-0" id="transactionTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="existing-tab" data-bs-toggle="tab" data-bs-target="#existing" type="button" role="tab" aria-controls="existing" aria-selected="true">{{ __('Transactions') }}</button>
@@ -132,6 +140,11 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="points-tab" data-bs-toggle="tab" data-bs-target="#points" type="button" role="tab" aria-controls="points" aria-selected="false">{{ __('Points') }}</button>
                         </li>
+                        @if(!$isAddonCard)
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="addon-tab" data-bs-toggle="tab" data-bs-target="#addon" type="button" role="tab" aria-controls="addon" aria-selected="false">{{ __('Addon') }}</button>
+                        </li>
+                        @endif
                     </ul>
 
                     <div class="tab-content mt-3" id="transactionTabsContent">
@@ -221,6 +234,54 @@
                                 </table>
                             </div>
                         </div>
+
+                        @if(!$isAddonCard)
+                        <div class="tab-pane fade" id="addon" role="tabpanel" aria-labelledby="addon-tab">
+                            @php
+                                $addons = data_get($virtualcards, 'data.addoncard', []);
+                                $addons = is_array($addons) ? $addons : [];
+                            @endphp
+
+                            @if(!empty($addons))
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>{{ __('Card ID') }}</th>
+                                                <th>{{ __('Last four') }}</th>
+                                                <th class="text-end">{{ __('Action') }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($addons as $addon)
+                                                @php
+                                                    $addonCardId = data_get($addon, 'cardid');
+                                                    $addonStatus = data_get($addon, 'lastfour', '0000');
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $addonCardId ?? '--' }}</td>
+                                                    <td>{{ $addonStatus }}</td>
+                                                    <td class="text-end">
+                                                        @if($addonCardId)
+                                                            <a href="{{ route('user.getdigitalcard', $addonCardId) }}" class="site-btn-sm primary-btn">
+                                                                <i class="fa fa-eye"></i>
+                                                            </a>
+                                                        @else
+                                                            <button type="button" class="site-btn-sm primary-btn" disabled>
+                                                                <i class="fa fa-eye"></i>
+                                                            </button>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="text-muted">{{ __('No addon cards found') }}</div>
+                            @endif
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -278,6 +339,33 @@
                 </div>
                 <div class="modal-footer">
                     <p class="text-danger mb-0">$1 + {{ $general->bsiload_fee }}% {{ __('Load Fund Fees apply. Minimum $10 can be loaded. Funds take 24-48 hours to load.') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addonCardModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+            <div class="modal-content site-table-modal">
+                <div class="modal-body popup-body">
+                    <button type="button" class="modal-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i data-lucide="x"></i>
+                    </button>
+                    <div class="popup-body-text">
+                        <div class="title">{{ __('Apply for addon card') }}</div>
+                        <p class="text-muted mb-3">
+                            {{ __('Add on card issuance fee of') }} <strong>${{ number_format((float) ($general->digifee ?? 0), 2) }}</strong>
+                        </p>
+
+                        <form method="POST" action="{{ route('user.digitaladdoncard') }}">
+                            @csrf
+                            <input type="hidden" name="cardid" value="{{ $virtualcards->data->cardid }}">
+                            <div class="action-btns">
+                                <button type="submit" class="site-btn-sm primary-btn">{{ __('Submit') }}</button>
+                                <button type="button" class="site-btn-sm red-btn" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
