@@ -8,6 +8,7 @@ use App\Models\Gateway;
 use App\Traits\ImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\MoncashService;
 
 class GatewayController extends Controller
 {
@@ -15,7 +16,7 @@ class GatewayController extends Controller
 
     public function __construct()
     {
-        $this->middleware('permission:automatic-gateway-manage', ['only' => ['automatic','update']]);
+        $this->middleware('permission:automatic-gateway-manage', ['only' => ['automatic','update','testMoncash']]);
     }
 
     public function automatic(Request $request)
@@ -73,6 +74,32 @@ class GatewayController extends Controller
 
         return redirect()->route('admin.gateway.automatic');
 
+    }
+
+    public function testMoncash($id)
+    {
+        $gateway = Gateway::findOrFail($id);
+
+        if (strtolower((string) $gateway->gateway_code) !== 'moncash') {
+            notify()->error(__('Selected gateway is not MonCash.'), 'Error');
+
+            return back();
+        }
+
+        try {
+            $result = (new MoncashService())->testConnection();
+
+            $message = __('MonCash connection successful. Mode: :mode | URL: :url', [
+                'mode' => strtoupper((string) ($result['mode'] ?? 'production')),
+                'url' => (string) ($result['base_url'] ?? ''),
+            ]);
+
+            notify()->success($message, 'Success');
+        } catch (\Throwable $exception) {
+            notify()->error(__('MonCash connection failed: :message', ['message' => $exception->getMessage()]), 'Error');
+        }
+
+        return back();
     }
 
     public function gatewayCurrency($gateway_id)

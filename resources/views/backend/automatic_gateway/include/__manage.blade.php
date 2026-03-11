@@ -13,6 +13,18 @@
             </div>
             <div class="modal-body">
                 <div class="row">
+                    @if(strtolower($gateway->gateway_code) === 'moncash')
+                        <div class="col-12 mb-3">
+                            <form action="{{ route('admin.gateway.test.moncash', $gateway->id) }}" method="post">
+                                @csrf
+                                <button type="submit" class="site-btn-sm primary-btn">
+                                    <i data-lucide="plug-zap"></i>
+                                    {{ __('Test MonCash Connection') }}
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+
                     <form action="{{ route('admin.gateway.update',$gateway->id) }}"
                           class="row" method="post"
                           enctype="multipart/form-data">

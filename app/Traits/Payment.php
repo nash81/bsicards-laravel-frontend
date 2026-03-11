@@ -6,6 +6,7 @@ use App\Enums\TxnStatus;
 use App\Models\DepositMethod;
 use App\Models\LevelReferral;
 use App\Models\Transaction;
+use App\Payment\MoncashTxn;
 use Payment\Binance\BinanceTxn;
 use Payment\Blockchain\BlockchainTxn;
 use Payment\BlockIo\BlockIoTxn;
@@ -161,6 +162,7 @@ trait Payment
             'paypal' => PaypalTxn::class,
             'stripe' => StripeTxn::class,
             'mollie' => MollieTxn::class,
+            'moncash' => MoncashTxn::class,
             'perfectmoney' => PerfectmoneyTxn::class,
             'coinbase' => CoinbaseTxn::class,
             'paystack' => PaytmTxn::class,

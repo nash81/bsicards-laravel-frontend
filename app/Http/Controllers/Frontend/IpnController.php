@@ -11,6 +11,7 @@ use App\Traits\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use App\Services\MoncashService;
 use Modules\Payment\Monnify\Monnify;
 use Mollie\Laravel\Facades\Mollie;
 use Payment\Securionpay\SecurionpayTxn;
@@ -167,6 +168,63 @@ class IpnController extends Controller
         } else {
             Txn::update($request->order_id, 'failed');
         }
+    }
+
+    public function moncashIpn(Request $request)
+    {
+        $ref = (string) ($request->get('reftrn')
+            ?? $request->get('orderId')
+            ?? $request->get('order_id')
+            ?? $request->get('reference')
+            ?? '');
+
+        $transactionId = (string) ($request->get('transactionId')
+            ?? $request->get('transaction_id')
+            ?? $request->get('payment_token')
+            ?? '');
+
+        if ($ref === '' && $transactionId !== '') {
+            $ref = (string) (Transaction::query()->where('approval_cause', $transactionId)->value('tnx') ?? '');
+        }
+
+        if ($ref === '') {
+            return $request->isMethod('post')
+                ? response()->json(['status' => 'ignored'], 202)
+                : redirect()->route('status.cancel');
+        }
+
+        try {
+            $moncash = new MoncashService();
+            $verification = [];
+
+            if ($transactionId !== '') {
+                $verification = $moncash->retrieveByTransactionId($transactionId);
+            }
+
+            if (! $moncash->isPaid($verification)) {
+                $verification = $moncash->retrieveByOrderId($ref);
+            }
+
+            if ($moncash->isPaid($verification)) {
+                $result = self::paymentSuccess($ref, false);
+
+                if ($request->isMethod('post')) {
+                    return response()->json(['status' => 'success']);
+                }
+
+                return $result ?: redirect()->route('status.success');
+            }
+
+            Txn::update($ref, TxnStatus::Failed);
+        } catch (\Throwable $exception) {
+            if ($request->isMethod('post')) {
+                return response()->json(['status' => 'error'], 500);
+            }
+        }
+
+        return $request->isMethod('post')
+            ? response()->json(['status' => 'failed'], 422)
+            : redirect()->route('status.cancel');
     }
 
     public function monnifyIpn()

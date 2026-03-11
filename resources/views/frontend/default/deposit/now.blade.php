@@ -2,8 +2,45 @@
 @section('title')
     {{ __('Deposit Now') }}
 @endsection
+
+@section('style')
+    <style>
+        .deposit-modern .site-card-body { gap: 1rem; }
+        .deposit-modern .deposit-form-panel { border: 1px solid rgba(15, 23, 42, .08); border-radius: 12px; padding: 1rem; background: #fff; }
+        .deposit-modern .inputs .input-label { font-weight: 600; margin-bottom: .45rem; }
+        .deposit-modern .inputs .form-control,
+        .deposit-modern .inputs .box-input,
+        .deposit-modern .inputs .select2-selection { min-height: 44px; border-radius: 10px; }
+        .deposit-modern .review-card { border: 1px solid rgba(15, 23, 42, .08); border-radius: 12px; overflow: hidden; }
+        .deposit-modern .review-card .site-card-header { background: #f8fafc; }
+        .deposit-modern .review-card .site-table-list { padding: .7rem 1rem; border-bottom: 1px solid rgba(15, 23, 42, .06); }
+        .deposit-modern .review-card .site-table-list:last-child { border-bottom: 0; }
+        .deposit-modern .gateway-logo-wrap {
+            width: 72px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid rgba(15, 23, 42, .12);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .deposit-modern .gateway-logo-wrap img,
+        .deposit-modern .deposit-gateway-logo,
+        .deposit-modern .img-icon {
+            max-width: 64px;
+            max-height: 32px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+        .deposit-modern .pay-action-btn { width: 100%; margin-top: 1rem; }
+    </style>
+@endsection
+
 @section('content')
-    <form action="{{ route('user.deposit.now') }}" method="post" enctype="multipart/form-data">
+    <form action="{{ route('user.deposit.now') }}" method="post" enctype="multipart/form-data" class="deposit-modern">
         @csrf
         <div class="row">
             <div class="col-xl-12 col-lg-12 col-md-12 col-12">
@@ -15,39 +52,37 @@
                         </div>
                     </div>
                     <div class="site-card-body">
-                        <div class="step-details-form mb-4">
-                            <form action="#">
-                                <div class="row">
-                                    <div class="col-xl-6 col-lg-6 col-md-6">
-                                        <div class="inputs">
-                                            <label for="" class="input-label">{{ __('Select Gateway') }}<span class="required">*</span></label>
-                                            <select name="gateway_code" class="box-input deposit-methods" id="gatewaySelect">
-                                                <option value="" disabled selected>--{{ __('Select Gateway') }}--</option>
-                                                @foreach ($gateways as $gateway)
-                                                    <option data-logo="{{ asset($gateway->logo) }}" value="{{ $gateway->gateway_code }}">{{ $gateway->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <div class="input-info-text charge"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-6 col-lg-6 col-md-6">
-                                        <div class="inputs">
-                                            <label for="" class="input-label">{{ __('Enter Amount:') }}<span class="required">*</span></label>
-                                            <div class="input-group">
-                                                <input type="text" class="form-control" name="amount" id="amount" required>
-                                                <span class="input-group-text" id="basic-addon1">{{ $currency }}</span>
-                                            </div>
-                                            <div class="input-info-text min-max"></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row manual-row">
-
+                        <div class="step-details-form mb-4 deposit-form-panel">
+                            <div class="row">
+                                <div class="col-xl-6 col-lg-6 col-md-6">
+                                    <div class="inputs">
+                                        <label for="" class="input-label">{{ __('Select Gateway') }}<span class="required">*</span></label>
+                                        <select name="gateway_code" class="box-input deposit-methods" id="gatewaySelect">
+                                            <option value="" disabled selected>--{{ __('Select Gateway') }}--</option>
+                                            @foreach ($gateways as $gateway)
+                                                <option data-logo="{{ asset($gateway->logo) }}" value="{{ $gateway->gateway_code }}">{{ $gateway->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="input-info-text charge"></div>
                                     </div>
                                 </div>
-                            </form>
+                                <div class="col-xl-6 col-lg-6 col-md-6">
+                                    <div class="inputs">
+                                        <label for="" class="input-label">{{ __('Enter Amount:') }}<span class="required">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="amount" id="amount" required>
+                                            <span class="input-group-text" id="basic-addon1">{{ $currency }}</span>
+                                        </div>
+                                        <div class="input-info-text min-max"></div>
+                                    </div>
+                                </div>
+
+                                <div class="row manual-row">
+
+                                </div>
+                            </div>
                         </div>
-                        <div class="site-card">
+                        <div class="site-card review-card">
                             <div class="site-card-header">
                                 <div class="title-small">{{ __('Review Details:') }}</div>
                             </div>
@@ -83,7 +118,9 @@
                                                 <div class="trx fw-bold">{{ __('Payment Method Logo') }}:</div>
                                             </div>
                                             <div class="site-table-col">
-                                                <div class="fw-bold" id="logo"><img class="table-icon" src="" alt=""></div>
+                                                <div class="fw-bold" id="logo">
+                                                    <span class="gateway-logo-wrap"><img class="deposit-gateway-logo" src="" alt="Gateway"></span>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="site-table-list">
@@ -122,7 +159,7 @@
                             @else
                             type="submit"
                             @endif
-                            class="site-btn polis-btn"
+                            class="site-btn polis-btn pay-action-btn"
                         >
                             {{ __('Proceed to payment') }}
                         </button>
@@ -178,11 +215,7 @@
                 return state.text;
             }
 
-            var $state = $(
-                '<span><img src="' + $(state.element).data('logo') + '" class="img-icon" /> ' + state.text + '</span>'
-            );
-
-            return $state;
+            return $('<span><img src="' + $(state.element).data('logo') + '" class="img-icon" alt="Gateway logo" /> ' + state.text + '</span>');
         };
 
         $('.deposit-methods').select2({
@@ -216,7 +249,7 @@
 
                 $('.method').html('<span class="type site-badge badge-primary">'+data.name+'</span>')
                 $('.min-max').text('Minimum ' + data.minimum_deposit + ' ' + currency + ' and ' + 'Maximum ' + data.maximum_deposit + ' ' + currency)
-                $('#logo').html(`<img class="table-icon" src='${data.gateway_logo}'>`);
+                $('#logo').html(`<span class="gateway-logo-wrap"><img class="deposit-gateway-logo" src="${data.gateway_logo}" alt="Gateway logo"></span>`);
                 var amount = $('#amount').val()
 
                 if (Number(amount) > 0) {
@@ -233,7 +266,7 @@
 
             });
 
-            $('#amount').on('keyup', function (e) {
+            $('#amount').on('keyup', function () {
                 "use strict"
                 var amount = $(this).val()
                 $('.amount').text((Number(amount)))

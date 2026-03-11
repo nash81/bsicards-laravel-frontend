@@ -250,6 +250,7 @@ Route::group(['prefix' => 'ipn', 'as' => 'ipn.', 'controller' => IpnController::
     Route::get('paystack', 'paystackIpn')->name('paystack');
     Route::get('flutterwave', 'flutterwaveIpn')->name('flutterwave');
     Route::post('coingate', 'coingateIpn')->name('coingate');
+    Route::match(['get', 'post'], 'moncash', 'moncashIpn')->name('moncash');
     Route::get('monnify', 'monnifyIpn')->name('monnify');
     Route::get('non-hosted-securionpay', 'nonHostedSecurionpayIpn')->name('non-hosted.securionpay')->middleware(['auth', 'XSS']);
     Route::post('coinremitter', 'coinremitterIpn')->name('coinremitter');

@@ -227,6 +227,7 @@ Route::group([
 Route::group(['prefix' => 'gateway', 'as' => 'gateway.', 'controller' => GatewayController::class], function () {
     Route::get('/automatic', 'automatic')->name('automatic');
     Route::post('update/{id}', 'update')->name('update')->withoutMiddleware('XSS');
+    Route::post('test-moncash/{id}', 'testMoncash')->name('test.moncash');
     Route::get('currency/{gateway_id}', 'gatewayCurrency')->name('supported.currency');
 });
 Route::group(['prefix' => 'deposit', 'as' => 'deposit.', 'controller' => DepositController::class], function () {
