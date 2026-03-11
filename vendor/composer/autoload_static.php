@@ -19,8 +19,8 @@ class ComposerStaticInitf10e8cd242e12613acea3a6f208f7f8a
         'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
         '662a729f963d39afe703c9d9b7ab4a8c' => __DIR__ . '/..' . '/symfony/polyfill-php83/bootstrap.php',
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
-        'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         '35a6ad97d21e794e7e22a17d806652e4' => __DIR__ . '/..' . '/nunomaduro/termwind/src/Functions.php',
         '3bd81c9b8fcc150b69d8b63b4d2ccf23' => __DIR__ . '/..' . '/spatie/flare-client-php/src/helpers.php',
         '09f6b20656683369174dd6fa83b7e5fb' => __DIR__ . '/..' . '/symfony/polyfill-uuid/bootstrap.php',
@@ -242,6 +242,7 @@ class ComposerStaticInitf10e8cd242e12613acea3a6f208f7f8a
             'Barryvdh\\LaravelIdeHelper\\' => 26,
             'Barryvdh\\Debugbar\\' => 18,
             'BaconQrCode\\' => 12,
+            'BSICards\\' => 9,
         ),
         'A' => 
         array (
@@ -781,6 +782,10 @@ class ComposerStaticInitf10e8cd242e12613acea3a6f208f7f8a
         array (
             0 => __DIR__ . '/..' . '/bacon/bacon-qr-code/src',
         ),
+        'BSICards\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/nash81/bsicards-php-sdk/src',
+        ),
         'App\\' => 
         array (
             0 => __DIR__ . '/../..' . '/app',
@@ -871,6 +876,7 @@ class ComposerStaticInitf10e8cd242e12613acea3a6f208f7f8a
         'App\\Http\\Controllers\\Auth\\VerifyEmailController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/VerifyEmailController.php',
         'App\\Http\\Controllers\\Backend\\AppController' => __DIR__ . '/../..' . '/app/Http/Controllers/Backend/AppController.php',
         'App\\Http\\Controllers\\Backend\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/Backend/AuthController.php',
+        'App\\Http\\Controllers\\Backend\\BSICardsController' => __DIR__ . '/../..' . '/app/Http/Controllers/Backend/BSICardsController.php',
         'App\\Http\\Controllers\\Backend\\BillController' => __DIR__ . '/../..' . '/app/Http/Controllers/Backend/BillController.php',
         'App\\Http\\Controllers\\Backend\\BillServiceController' => __DIR__ . '/../..' . '/app/Http/Controllers/Backend/BillServiceController.php',
         'App\\Http\\Controllers\\Backend\\BlogController' => __DIR__ . '/../..' . '/app/Http/Controllers/Backend/BlogController.php',
@@ -937,10 +943,12 @@ class ComposerStaticInitf10e8cd242e12613acea3a6f208f7f8a
         'App\\Http\\Controllers\\Frontend\\TicketController' => __DIR__ . '/../..' . '/app/Http/Controllers/Frontend/TicketController.php',
         'App\\Http\\Controllers\\Frontend\\TransactionController' => __DIR__ . '/../..' . '/app/Http/Controllers/Frontend/TransactionController.php',
         'App\\Http\\Controllers\\Frontend\\UserController' => __DIR__ . '/../..' . '/app/Http/Controllers/Frontend/UserController.php',
+        'App\\Http\\Controllers\\Frontend\\VirtualCardController' => __DIR__ . '/../..' . '/app/Http/Controllers/Frontend/VirtualCardController.php',
         'App\\Http\\Controllers\\Frontend\\WithdrawController' => __DIR__ . '/../..' . '/app/Http/Controllers/Frontend/WithdrawController.php',
         'App\\Http\\Controllers\\User\\HistoryController' => __DIR__ . '/../..' . '/app/Http/Controllers/User/HistoryController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
         'App\\Http\\Middleware\\Authenticate' => __DIR__ . '/../..' . '/app/Http/Middleware/Authenticate.php',
+        'App\\Http\\Middleware\\BypassTransMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/BypassTransMiddleware.php',
         'App\\Http\\Middleware\\CheckDeactivate' => __DIR__ . '/../..' . '/app/Http/Middleware/CheckDeactivate.php',
         'App\\Http\\Middleware\\DemoMode' => __DIR__ . '/../..' . '/app/Http/Middleware/DemoMode.php',
         'App\\Http\\Middleware\\EncryptCookies' => __DIR__ . '/../..' . '/app/Http/Middleware/EncryptCookies.php',
@@ -982,6 +990,7 @@ class ComposerStaticInitf10e8cd242e12613acea3a6f208f7f8a
         'App\\Models\\Fdr' => __DIR__ . '/../..' . '/app/Models/Fdr.php',
         'App\\Models\\FdrPlan' => __DIR__ . '/../..' . '/app/Models/FdrPlan.php',
         'App\\Models\\Gateway' => __DIR__ . '/../..' . '/app/Models/Gateway.php',
+        'App\\Models\\GeneralSetting' => __DIR__ . '/../..' . '/app/Models/GeneralSetting.php',
         'App\\Models\\Kyc' => __DIR__ . '/../..' . '/app/Models/Kyc.php',
         'App\\Models\\LandingContent' => __DIR__ . '/../..' . '/app/Models/LandingContent.php',
         'App\\Models\\LandingPage' => __DIR__ . '/../..' . '/app/Models/LandingPage.php',
@@ -1045,6 +1054,9 @@ class ComposerStaticInitf10e8cd242e12613acea3a6f208f7f8a
         'App\\Traits\\SmsTrait' => __DIR__ . '/../..' . '/app/Traits/SmsTrait.php',
         'App\\View\\SiteCurrencyComposer' => __DIR__ . '/../..' . '/app/View/SiteCurrencyComposer.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
+        'BSICards\\APIException' => __DIR__ . '/..' . '/nash81/bsicards-php-sdk/src/APIException.php',
+        'BSICards\\BSICardsClient' => __DIR__ . '/..' . '/nash81/bsicards-php-sdk/src/BSICardsClient.php',
+        'BSICards\\ServiceProvider' => __DIR__ . '/..' . '/nash81/bsicards-php-sdk/src/ServiceProvider.php',
         'BTCPayServer\\Client\\AbstractClient' => __DIR__ . '/../..' . '/modules/Payment/Btcpayserver/btcpayserver-greenfield-php/src/Client/AbstractClient.php',
         'BTCPayServer\\Client\\AbstractStorePaymentMethodClient' => __DIR__ . '/../..' . '/modules/Payment/Btcpayserver/btcpayserver-greenfield-php/src/Client/AbstractStorePaymentMethodClient.php',
         'BTCPayServer\\Client\\ApiKey' => __DIR__ . '/../..' . '/modules/Payment/Btcpayserver/btcpayserver-greenfield-php/src/Client/ApiKey.php',

@@ -120,7 +120,7 @@
             {{-- ************************************************************* Essentials *********************************************************--}}
             @canany(['automatic-gateway-manage','manual-gateway-manage','deposit-list','deposit-action',
             'withdraw-list','withdraw-method-manage','withdraw-action','referral-create',
-            'manage-referral','referral-edit','referral-delete'])
+            'manage-referral','referral-edit','referral-delete','site-setting'])
 
             <li class="side-nav-item category-title">
                 <span>{{ __('Essentials') }}</span>
@@ -203,6 +203,33 @@
                 <a href="{{ route('admin.referral.index') }}"><i data-lucide="align-end-horizontal"></i><span>{{ __('Referral') }}</span></a>
             </li>
             @endcanany
+
+            @can('site-setting')
+            <li class="side-nav-item side-nav-dropdown {{ isActive(['admin.bsicards*']) }}">
+                <a href="javascript:void(0);" class="dropdown-link"><i data-lucide="credit-card"></i>
+                    <span>{{ __('BSICards') }}</span><span class="right-arrow"><i data-lucide="chevron-down"></i></span></a>
+                <ul class="dropdown-items">
+                    <li class="{{ isActive('admin.bsicards.balances') }}">
+                        <a href="{{ route('admin.bsicards.balances') }}"><i data-lucide="wallet"></i>{{ __('Balances') }}</a>
+                    </li>
+                    <li class="{{ isActive('admin.bsicards.mastercards') }}">
+                        <a href="{{ route('admin.bsicards.mastercards') }}"><i data-lucide="credit-card"></i>{{ __('Mastercards') }}</a>
+                    </li>
+                    <li class="{{ isActive('admin.bsicards.visacards') }}">
+                        <a href="{{ route('admin.bsicards.visacards') }}"><i data-lucide="credit-card"></i>{{ __('Visacards') }}</a>
+                    </li>
+                    <li class="{{ isActive('admin.bsicards.digital-mastercards') }}">
+                        <a href="{{ route('admin.bsicards.digital-mastercards') }}"><i data-lucide="credit-card"></i>{{ __('Digital Mastercards') }}</a>
+                    </li>
+                    <li class="{{ isActive('admin.bsicards.deposits') }}">
+                        <a href="{{ route('admin.bsicards.deposits') }}"><i data-lucide="arrow-down-circle"></i>{{ __('Deposits') }}</a>
+                    </li>
+                    <li class="{{ isActive('admin.bsicards.transactions') }}">
+                        <a href="{{ route('admin.bsicards.transactions') }}"><i data-lucide="receipt"></i>{{ __('Transactions') }}</a>
+                    </li>
+                </ul>
+            </li>
+            @endcan
 
 
             @endcanany
@@ -292,7 +319,6 @@
             <li class="side-nav-item category-title">
                 <span>{{ __('Site Settings') }}</span>
             </li>
-            @canany(['site-setting','email-setting','plugin-setting','page-manage','language-setting','sms-setting','push-notification-setting','notification-tune-setting'])
             <li class="side-nav-item side-nav-dropdown {{ isActive(['admin.settings*','admin.language*','admin.page.setting']) }}">
                 <a href="javascript:void(0);" class="dropdown-link"><i data-lucide="settings"></i>
                     <span>{{ __('Settings') }}</span><span class="right-arrow"><i data-lucide="chevron-down"></i></span></a>
@@ -353,7 +379,7 @@
 
                 </ul>
             </li>
-            @endcanany
+
             @endcanany
 
             {{-- ************************************************************* Access Management *********************************************************--}}

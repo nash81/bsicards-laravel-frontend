@@ -4905,6 +4905,70 @@
             "install-path": "../myclabs/deep-copy"
         },
         {
+            "name": "nash81/bsicards-php-sdk",
+            "version": "dev-main",
+            "version_normalized": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nash81/bsicards-php-sdk.git",
+                "reference": "5d0efee74f453fd83a4a2739c66ea3fe0e9764a6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nash81/bsicards-php-sdk/zipball/5d0efee74f453fd83a4a2739c66ea3fe0e9764a6",
+                "reference": "5d0efee74f453fd83a4a2739c66ea3fe0e9764a6",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "illuminate/support": "^9.0|^10.0|^11.0",
+                "phpstan/phpstan": "^1.8",
+                "phpunit/phpunit": "^9.5"
+            },
+            "suggest": {
+                "illuminate/support": "For Laravel integration (optional)"
+            },
+            "time": "2026-03-06T08:28:37+00:00",
+            "default-branch": true,
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "BSICards\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "BSI Group",
+                    "email": "cs@bsigroup.tech"
+                }
+            ],
+            "description": "PHP SDK for BSICARDS - Card Issuance API",
+            "homepage": "https://github.com/nash81/bsicards-php-sdk",
+            "keywords": [
+                "api",
+                "bsicards",
+                "card-issuance",
+                "digital-wallet",
+                "mastercard",
+                "sdk",
+                "visa"
+            ],
+            "support": {
+                "email": "cs@bsigroup.tech",
+                "issues": "https://github.com/nash81/bsicards-php-sdk/issues",
+                "source": "https://github.com/nash81/bsicards-php-sdk"
+            },
+            "install-path": "../nash81/bsicards-php-sdk"
+        },
+        {
             "name": "nesbot/carbon",
             "version": "2.72.3",
             "version_normalized": "2.72.3.0",

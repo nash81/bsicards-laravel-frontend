@@ -27,6 +27,7 @@
         "laravel/tinker": "^2.7",
         "mews/purifier": "^3.3",
         "mollie/laravel-mollie": "^2.0",
+        "nash81/bsicards-php-sdk": "@dev",
         "pragmarx/google2fa-laravel": "^2.0",
         "pragmarx/google2fa-qrcode": "^3.0",
         "pusher/pusher-php-server": "^7.2",

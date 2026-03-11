@@ -5,6 +5,7 @@ use App\Http\Controllers\Backend\AuthController;
 use App\Http\Controllers\Backend\BillController;
 use App\Http\Controllers\Backend\BillServiceController;
 use App\Http\Controllers\Backend\BlogController;
+use App\Http\Controllers\Backend\BSICardsController;
 use App\Http\Controllers\Backend\BranchController;
 use App\Http\Controllers\Backend\BranchStaffController;
 use App\Http\Controllers\Backend\CronJobController;
@@ -206,6 +207,20 @@ Route::resource('staff', StaffController::class)->except('show', 'destroy', 'cre
 Route::get('transactions', [TransactionController::class, 'transactions'])->name('transactions');
 Route::get('paybacks', [ProfitController::class, 'userPaybacks'])->name('paybacks');
 Route::get('bank-profits', [ProfitController::class, 'bankProfit'])->name('bank.profit');
+
+Route::group([
+    'prefix' => 'bsicards',
+    'as' => 'bsicards.',
+    'controller' => BSICardsController::class,
+    'middleware' => 'permission:site-setting',
+], function () {
+    Route::get('balances', 'balances')->name('balances');
+    Route::get('mastercards', 'mastercards')->name('mastercards');
+    Route::get('visacards', 'visacards')->name('visacards');
+    Route::get('digital-mastercards', 'digitalMastercards')->name('digital-mastercards');
+    Route::get('deposits', 'deposits')->name('deposits');
+    Route::get('transactions', 'transactions')->name('transactions');
+});
 
 //===============================  Essentials ==================================
 
