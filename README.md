@@ -116,6 +116,27 @@ If your host uses cron, configure Laravel scheduler (optional but recommended):
 ```
 Admin Login: https://your-domain.com/admin
 username: cs@cards.bsigroup.tech Password: Abcd4321@
+
+## 7) Install the MonCash gateway seed (optional)
+
+If you want to install the default MonCash gateway record into the `gateways` table, run:
+
+```bash
+php artisan db:seed --class=Database\\Seeders\\MoncashGatewaySeeder
+```
+
+What this seeder adds or updates:
+
+- Gateway code: `moncash`
+- Name: `MonCash`
+- Supported currency: `HTG`
+- Credentials keys: `clientId`, `clientSecret`, `businessKey`, `mode`
+- Default mode: `sandbox`
+
+The seeder is idempotent, so you can run it again later and it will update the existing `moncash` gateway record instead of creating duplicates.
+
+If you are on shared hosting without terminal access, run the command once anywhere you do have Artisan access before deploying the updated database, or seed it locally and migrate the resulting record.
+
 ## Troubleshooting
 
 ### Database connection failed
