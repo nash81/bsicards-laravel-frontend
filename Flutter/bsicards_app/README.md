@@ -19,6 +19,15 @@ Modern Flutter mobile client for the BSI Cards Laravel backend APIs.
 - `lib/screens/` app UI screens
 - `lib/widgets/` reusable UI components
 
+## Getting Started
+
+1. **Set your server URL** – Open `lib/config/app_config.dart` and change `baseUrl` to point to your website:
+   ```dart
+   static const String baseUrl = 'https://your-domain.com/api/v1';
+   ```
+2. Run `flutter pub get` to install dependencies.
+3. Launch the app with `flutter run`.
+
 ## Backend API Base URL
 Update `lib/config/app_config.dart`:
 
