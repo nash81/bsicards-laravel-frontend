@@ -2,6 +2,57 @@
 @section('title')
     {{ __('Pending Manual Deposit') }}
 @endsection
+
+@section('style')
+    <style>
+        .manual-deposit-modal .popup-body-text {
+            max-height: 78vh;
+            overflow-y: auto;
+        }
+        .manual-deposit-modal .proof-preview-wrap {
+            margin-top: .55rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 140px;
+            height: 95px;
+            border: 1px solid rgba(15, 23, 42, .12);
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+        }
+        .manual-deposit-modal .proof-preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .manual-deposit-modal .proof-file-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            margin-top: .45rem;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+        .manual-deposit-modal .deposit-meta-list .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+        .manual-deposit-modal .manual-data-list .list-group-item {
+            display: block;
+        }
+        .manual-deposit-modal .manual-key {
+            display: block;
+            margin-bottom: .4rem;
+            font-weight: 600;
+        }
+    </style>
+@endsection
+
 @section('deposit_content')
     <div class="col-xl-12 col-md-12">
         <div class="site-card">
@@ -66,7 +117,7 @@
                 aria-labelledby="editPendingDepositModalLabel"
                 aria-hidden="true"
             >
-                <div class="modal-dialog modal-md modal-dialog-centered">
+                <div class="modal-dialog modal-lg modal-dialog-centered manual-deposit-modal">
                     <div class="modal-content site-table-modal">
                         <div class="modal-body popup-body">
                             <button

@@ -8,11 +8,161 @@ use App\Models\Transaction;
 use App\Enums\TxnStatus;
 use App\Enums\TxnType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Txn;
 
 class CardController extends Controller
 {
+    public function fees()
+    {
+        $general = GeneralSetting::first();
+
+        return response()->json([
+            'status' => true,
+            'data'   => [
+                'bsiissue_fee' => (float) ($general->bsiissue_fee ?? 0),
+                'bsiload_fee'  => (float) ($general->bsiload_fee ?? 0),
+                'digifee'      => (float) ($general->digifee ?? 0),
+            ],
+        ]);
+    }
+
+    // -------------------------------------------------------
+    // Shared helper – extract a list from a BSI response,
+    // trying the most common response shapes in order.
+    // -------------------------------------------------------
+    private function extractList(?object $response, string $debugTag = ''): array
+    {
+        if ($response === null) {
+            \Log::warning("BSI [{$debugTag}] response is null / curl failed");
+            return [];
+        }
+
+        \Log::debug("BSI [{$debugTag}] raw", ['body' => json_encode($response)]);
+
+        // Shape 1 – { code: 200, data: [ ... ] }
+        if (isset($response->code) && $response->code == 200) {
+            $data = $response->data ?? null;
+
+            if (is_array($data))  return $data;
+            if (is_object($data)) {
+                // Shape 2 – { code: 200, data: { cards: [...] } }
+                foreach (['cards', 'data', 'result', 'list'] as $key) {
+                    if (isset($data->$key) && is_array($data->$key)) {
+                        return $data->$key;
+                    }
+                }
+            }
+
+            // Shape 3 – { code: 200, cards: [...] }   (data key missing)
+            foreach (['cards', 'result', 'list'] as $key) {
+                if (isset($response->$key) && is_array($response->$key)) {
+                    return $response->$key;
+                }
+            }
+
+            \Log::warning("BSI [{$debugTag}] code=200 but no recognisable list field",
+                ['keys' => array_keys((array) $response)]);
+            return [];
+        }
+
+        // Shape 4 – { status: true/200, data: [...] }
+        if (isset($response->status) && ($response->status === true || $response->status == 200)) {
+            $data = $response->data ?? null;
+            if (is_array($data)) return $data;
+        }
+
+        \Log::warning("BSI [{$debugTag}] unexpected response shape",
+            ['code' => $response->code ?? 'n/a', 'keys' => array_keys((array) $response)]);
+        return [];
+    }
+
+    private function normalizePayload($payload): array
+    {
+        if (is_array($payload)) {
+            return $payload;
+        }
+
+        if (is_object($payload)) {
+            return json_decode(json_encode($payload), true) ?: [];
+        }
+
+        return [];
+    }
+
+    private function normalizeDigitalCard(array $card): array
+    {
+        $type = strtolower((string) ($card['type'] ?? ''));
+
+        if (! array_key_exists('isaddon', $card) && ! array_key_exists('is_addon', $card)) {
+            $card['isaddon'] = $type === 'virtual-addon' ? 1 : 0;
+        }
+
+        return $card;
+    }
+
+    private function isSequentialArray(array $value): bool
+    {
+        return $value === [] || array_keys($value) === range(0, count($value) - 1);
+    }
+
+    private function extractArrayList(array $payload, array $keys): array
+    {
+        foreach ($keys as $key) {
+            $value = $payload[$key] ?? null;
+
+            if (is_array($value) && $this->isSequentialArray($value)) {
+                return $value;
+            }
+        }
+
+        return [];
+    }
+
+    private function extractDigitalTransactions(array $card): array
+    {
+        $transactions = $card['transactions'] ?? null;
+
+        if (is_array($transactions) && $this->isSequentialArray($transactions)) {
+            return $transactions;
+        }
+
+        if (! is_array($transactions)) {
+            return [];
+        }
+
+        $paths = [
+            ['response', 'items'],
+            ['response', 'data', 'cardTransactions'],
+            ['response', 'data', 'transactions'],
+            ['data', 'cardTransactions'],
+            ['data', 'transactions'],
+            ['items'],
+            ['cardTransactions'],
+            ['transactions'],
+        ];
+
+        foreach ($paths as $path) {
+            $value = $transactions;
+
+            foreach ($path as $segment) {
+                if (! is_array($value) || ! array_key_exists($segment, $value)) {
+                    $value = null;
+                    break;
+                }
+
+                $value = $value[$segment];
+            }
+
+            if (is_array($value) && $this->isSequentialArray($value)) {
+                return $value;
+            }
+        }
+
+        return [];
+    }
+
     // -------------------------------------------------------
     // Shared helper – BSI API call
     // -------------------------------------------------------
@@ -25,7 +175,7 @@ class CardController extends Controller
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => '',
             CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_TIMEOUT        => 90,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST  => 'POST',
@@ -37,8 +187,47 @@ class CardController extends Controller
             ],
         ]);
         $response = curl_exec($curl);
+        $curlErrNo = curl_errno($curl);
+        $curlError = curl_error($curl);
+        $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
-        return json_decode($response);
+
+        if ($response === false) {
+            \Log::error('BSI cURL transport failure', [
+                'endpoint' => $endpoint,
+                'payload' => $body,
+                'curl_errno' => $curlErrNo,
+                'curl_error' => $curlError,
+                'http_code' => $httpCode,
+            ]);
+
+            return (object) [
+                'code' => 0,
+                'status' => 'error',
+                'message' => $curlError ?: 'BSI request failed before receiving a response.',
+                'http_code' => $httpCode,
+            ];
+        }
+
+        $decoded = json_decode($response);
+        if (json_last_error() !== JSON_ERROR_NONE || $decoded === null) {
+            \Log::error('BSI non-JSON/empty response', [
+                'endpoint' => $endpoint,
+                'payload' => $body,
+                'http_code' => $httpCode,
+                'json_error' => json_last_error_msg(),
+                'raw_response' => is_string($response) ? mb_substr($response, 0, 2000) : null,
+            ]);
+
+            return (object) [
+                'code' => $httpCode ?: 0,
+                'status' => 'error',
+                'message' => 'BSI returned an invalid response.',
+                'raw_response' => is_string($response) ? mb_substr($response, 0, 500) : null,
+            ];
+        }
+
+        return $decoded;
     }
 
     // =======================================================
@@ -55,8 +244,8 @@ class CardController extends Controller
 
         return response()->json([
             'status'  => true,
-            'cards'   => isset($cards->code) && $cards->code == 200 ? $cards->data ?? [] : [],
-            'pending' => isset($pending->code) && $pending->code == 200 ? $pending->data ?? [] : [],
+            'cards'   => $this->extractList($cards,   'getallcard'),
+            'pending' => $this->extractList($pending, 'getpendingcards'),
         ]);
     }
 
@@ -117,6 +306,48 @@ class CardController extends Controller
         return response()->json(['status' => false, 'message' => 'Failed to load funds. Please try again.'], 500);
     }
 
+    public function masterApply(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pin' => 'required|numeric',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $user    = $request->user();
+        $general = GeneralSetting::first();
+        $baseAmount = 10;
+        $fee        = (float) ($general->bsiissue_fee ?? 0);
+        $total      = $baseAmount + $fee;
+
+        if ($user->balance < $total) {
+            return response()->json(['status' => false, 'message' => 'Insufficient balance.'], 422);
+        }
+
+        $user->balance -= $total;
+        $user->save();
+
+        $result = $this->bsiCall('newcard', [
+            'useremail'  => $user->email,
+            'nameoncard' => trim($user->first_name . ' ' . $user->last_name),
+            'pin'        => $request->pin,
+        ], $general);
+
+        if (isset($result->code) && $result->code == 200) {
+            Txn::new($total, $fee, $total, 'BSICards', 'New Mastercard Fees', TxnType::Subtract, TxnStatus::Success, null, null, $user->id);
+            return response()->json([
+                'status'  => true,
+                'message' => 'New Mastercard requested. Please allow 24-48 hours.',
+                'data'    => $result->data ?? null,
+            ]);
+        }
+
+        $user->balance += $total;
+        $user->save();
+        return response()->json(['status' => false, 'message' => $result->message ?? 'Error requesting new card.'], 500);
+    }
+
     public function masterBlock(Request $request, string $cardId)
     {
         $user    = $request->user();
@@ -150,13 +381,13 @@ class CardController extends Controller
         $user    = $request->user();
         $general = GeneralSetting::first();
 
-        $cards   = $this->bsiCall('getallvisacard', ['useremail' => $user->email], $general);
-        $pending = $this->bsiCall('getvisapendingcards', ['useremail' => $user->email], $general);
+        $cards   = $this->bsiCall('visagetallcard',      ['useremail' => $user->email], $general);
+        $pending = $this->bsiCall('visagetpendingcards', ['useremail' => $user->email], $general);
 
         return response()->json([
             'status'  => true,
-            'cards'   => isset($cards->code) && $cards->code == 200 ? $cards->data ?? [] : [],
-            'pending' => isset($pending->code) && $pending->code == 200 ? $pending->data ?? [] : [],
+            'cards'   => $this->extractList($cards,   'visagetallcard'),
+            'pending' => $this->extractList($pending, 'visagetpendingcards'),
         ]);
     }
 
@@ -165,8 +396,8 @@ class CardController extends Controller
         $user    = $request->user();
         $general = GeneralSetting::first();
 
-        $card  = $this->bsiCall('getvisacard', ['useremail' => $user->email, 'cardid' => $cardId], $general);
-        $trans = $this->bsiCall('getvisacardtransactions', ['useremail' => $user->email, 'cardid' => $cardId], $general);
+        $card  = $this->bsiCall('visagetcard', ['useremail' => $user->email, 'cardid' => $cardId], $general);
+        $trans = $this->bsiCall('visagetcardtransactions', ['useremail' => $user->email, 'cardid' => $cardId], $general);
 
         if (! isset($card->code) || $card->code != 200) {
             return response()->json(['status' => false, 'message' => 'Card not found.'], 404);
@@ -191,7 +422,7 @@ class CardController extends Controller
 
         $user    = $request->user();
         $general = GeneralSetting::first();
-        $fee     = round($request->amount * $general->usbvisa_loadfee / 100, 2);
+        $fee     = round($request->amount * ($general->bsiload_fee ?? 0) / 100, 2);
         $total   = $request->amount + $fee;
 
         if ($user->balance < $total) {
@@ -217,6 +448,89 @@ class CardController extends Controller
         return response()->json(['status' => false, 'message' => 'Failed to load funds.'], 500);
     }
 
+    public function visaApply(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pin'              => 'required|numeric',
+            'dob'              => 'required|string',
+            'nationalidnumber' => 'required|string',
+            'userphoto'        => 'nullable',
+            'nationalidimage'  => 'nullable',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $fileValidator = Validator::make($request->all(), [
+            'userphoto'       => 'nullable|file|mimes:jpg,jpeg,png|max:4096',
+            'nationalidimage' => 'nullable|file|mimes:jpg,jpeg,png|max:4096',
+        ]);
+        if ($fileValidator->fails()) {
+            return response()->json(['status' => false, 'message' => $fileValidator->errors()->first()], 422);
+        }
+
+        $userPhotoUrl = $request->input('userphoto');
+        $nationalIdImageUrl = $request->input('nationalidimage');
+
+        if ($request->hasFile('userphoto')) {
+            $path = $request->file('userphoto')->store('images', 'public');
+            $userPhotoUrl = Storage::disk('public')->url($path);
+        }
+
+        if ($request->hasFile('nationalidimage')) {
+            $path = $request->file('nationalidimage')->store('images', 'public');
+            $nationalIdImageUrl = Storage::disk('public')->url($path);
+        }
+
+        if (empty($userPhotoUrl) || empty($nationalIdImageUrl)) {
+            return response()->json(['status' => false, 'message' => 'Both user photo and national ID image are required.'], 422);
+        }
+
+        if (! $request->hasFile('userphoto') && ! filter_var($userPhotoUrl, FILTER_VALIDATE_URL)) {
+            return response()->json(['status' => false, 'message' => 'User photo must be a valid URL or image file.'], 422);
+        }
+
+        if (! $request->hasFile('nationalidimage') && ! filter_var($nationalIdImageUrl, FILTER_VALIDATE_URL)) {
+            return response()->json(['status' => false, 'message' => 'National ID image must be a valid URL or image file.'], 422);
+        }
+
+        $user    = $request->user();
+        $general = GeneralSetting::first();
+        $baseAmount = 10;
+        $fee        = (float) ($general->bsiissue_fee ?? 0);
+        $total      = $baseAmount + $fee;
+
+        if ($user->balance < $total) {
+            return response()->json(['status' => false, 'message' => 'Insufficient balance.'], 422);
+        }
+
+        $user->balance -= $total;
+        $user->save();
+
+        $result = $this->bsiCall('visanewcard', [
+            'useremail'        => $user->email,
+            'nameoncard'       => trim($user->first_name . ' ' . $user->last_name),
+            'pin'              => $request->pin,
+            'dob'              => $request->dob,
+            'userphoto'        => $userPhotoUrl,
+            'nationalidimage'  => $nationalIdImageUrl,
+            'nationalidnumber' => $request->nationalidnumber,
+        ], $general);
+
+        if (isset($result->code) && $result->code == 200) {
+            Txn::new($total, $fee, $total, 'BSICards', 'New Visacard Fees', TxnType::Subtract, TxnStatus::Success, null, null, $user->id);
+            return response()->json([
+                'status'  => true,
+                'message' => 'New Visa card requested. Please allow 24-48 hours.',
+                'data'    => $result->data ?? null,
+            ]);
+        }
+
+        $user->balance += $total;
+        $user->save();
+        return response()->json(['status' => false, 'message' => $result->message ?? 'Error requesting new card.'], 500);
+    }
+
     public function visaBlock(Request $request, string $cardId)
     {
         $user    = $request->user();
@@ -229,6 +543,18 @@ class CardController extends Controller
         return response()->json(['status' => false, 'message' => 'Failed to block card.'], 500);
     }
 
+    public function visaUnblock(Request $request, string $cardId)
+    {
+        $user    = $request->user();
+        $general = GeneralSetting::first();
+        $result  = $this->bsiCall('visaunblockcard', ['useremail' => $user->email, 'cardid' => $cardId], $general);
+
+        if (isset($result->code) && $result->code == 200) {
+            return response()->json(['status' => true, 'message' => 'Visa card unblock requested.']);
+        }
+        return response()->json(['status' => false, 'message' => 'Failed to unblock card.'], 500);
+    }
+
     // =======================================================
     // DIGITAL MASTERCARD
     // =======================================================
@@ -239,10 +565,13 @@ class CardController extends Controller
         $general = GeneralSetting::first();
 
         $cards = $this->bsiCall('getalldigital', ['useremail' => $user->email], $general);
+        $list = array_map(function ($rawCard) {
+            return $this->normalizeDigitalCard($this->normalizePayload($rawCard));
+        }, $this->extractList($cards, 'getalldigital'));
 
         return response()->json([
             'status' => true,
-            'cards'  => isset($cards->code) && $cards->code == 200 ? $cards->data ?? [] : [],
+            'cards'  => $list,
         ]);
     }
 
@@ -258,10 +587,18 @@ class CardController extends Controller
             return response()->json(['status' => false, 'message' => 'Card not found.'], 404);
         }
 
+        $cardData = $this->normalizeDigitalCard(
+            $this->normalizePayload($card->data ?? $card)
+        );
+
         return response()->json([
-            'status'   => true,
-            'card'     => $card->data ?? $card,
-            'check3ds' => $check3ds->data ?? null,
+            'status'       => true,
+            'card'         => $cardData,
+            'transactions' => $this->extractDigitalTransactions($cardData),
+            'deposits'     => $this->extractArrayList($cardData, ['deposits']),
+            'points'       => $this->extractArrayList($cardData, ['points']),
+            'addon'        => $this->extractArrayList($cardData, ['addoncard', 'addon']),
+            'check3ds'     => $check3ds->data ?? null,
         ]);
     }
 
@@ -315,16 +652,30 @@ class CardController extends Controller
         return response()->json(['status' => false, 'message' => 'Failed to block card.'], 500);
     }
 
+    public function digitalUnblock(Request $request, string $cardId)
+    {
+        $user    = $request->user();
+        $general = GeneralSetting::first();
+        $result  = $this->bsiCall('unblockdigital', ['useremail' => $user->email, 'cardid' => $cardId], $general);
+
+        if (isset($result->code) && $result->code == 200) {
+            return response()->json(['status' => true, 'message' => 'Digital card unblock requested.']);
+        }
+        return response()->json(['status' => false, 'message' => 'Failed to unblock card.'], 500);
+    }
+
     public function digitalApply(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|string|max:100',
             'lastname'  => 'required|string|max:100',
-            'address'   => 'required|string',
+            'address1'  => 'required|string',
             'city'      => 'required|string',
-            'state'     => 'required|string',
             'country'   => 'required|string',
-            'zip'       => 'required|string',
+            'state'     => 'required|string',
+            'postalcode' => 'required|string',
+            'countrycode' => 'required|string',
+            'phone'     => 'required|string',
             'dob'       => 'required|string',
         ]);
         if ($validator->fails()) {
@@ -342,19 +693,37 @@ class CardController extends Controller
         $user->balance -= $fee;
         $user->save();
 
-        $body = array_merge($request->only(['firstname','lastname','address','city','state','country','zip','dob']), [
+        $body = array_merge($request->only(['useremail','firstname','lastname','address1','city','country','state','postalcode','countrycode','phone','dob']), [
             'useremail' => $user->email,
         ]);
-        $result = $this->bsiCall('newdigitalcard', $body, $general);
+        $result = $this->bsiCall('digitalnewvirtualcard', $body, $general);
 
         if (isset($result->code) && $result->code == 200) {
             Txn::new($fee, 0, $fee, 'BSICards', 'New Virtual Digital MasterCard Issuance For ' . $user->email, TxnType::Subtract, TxnStatus::Success, null, null, $user->id);
             return response()->json(['status' => true, 'message' => 'Digital card application submitted.', 'data' => $result->data ?? null]);
         }
 
+        $providerMessage = null;
+        if (is_object($result)) {
+            $providerMessage = $result->message
+                ?? ($result->error ?? null)
+                ?? (isset($result->data) && is_object($result->data) ? ($result->data->message ?? null) : null)
+                ?? (isset($result->response) && is_object($result->response) ? ($result->response->message ?? null) : null);
+        }
+
+        \Log::error('BSI digitalnewvirtualcard failed', [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'payload' => $body,
+            'provider_response' => $result,
+        ]);
+
         $user->balance += $fee;
         $user->save();
-        return response()->json(['status' => false, 'message' => $result->message ?? 'Failed to apply for card.'], 500);
+        return response()->json([
+            'status' => false,
+            'message' => $providerMessage ?: 'Failed to apply for card.',
+        ], 500);
     }
 
     public function digitalAddon(Request $request)
@@ -425,9 +794,17 @@ class CardController extends Controller
      */
     public function approve3ds(Request $request, string $cardId)
     {
-        $validator = Validator::make($request->all(), ['eventid' => 'required|string']);
+        $validator = Validator::make($request->all(), [
+            'eventId' => 'nullable|string',
+            'eventid' => 'nullable|string',
+        ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $eventId = $request->input('eventId', $request->input('eventid'));
+        if (empty($eventId)) {
+            return response()->json(['status' => false, 'message' => 'eventId is required.'], 422);
         }
 
         $user    = $request->user();
@@ -435,7 +812,7 @@ class CardController extends Controller
         $result  = $this->bsiCall('approve3ds', [
             'useremail' => $user->email,
             'cardid'    => $cardId,
-            'eventid'   => $request->eventid,
+            'eventId'   => $eventId,
         ], $general);
 
         if (isset($result->code) && $result->code == 200) {

@@ -5,6 +5,111 @@
 @endsection
 @push('style')
 <link rel="stylesheet" href="{{ asset('front/css/daterangepicker.css') }}">
+<style>
+    #trxViewDetailsBox {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 2000;
+        display: none;
+        background: rgba(0, 0, 0, 0.5);
+        padding: clamp(12px, 3vw, 24px);
+    }
+
+    #trxViewDetailsBox.is-open {
+        display: grid;
+        place-items: center;
+    }
+
+    #trxViewDetailsBox .trx-modal-dialog {
+        width: min(640px, 100%);
+        max-height: calc(100vh - 24px);
+        overflow: hidden;
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+    }
+
+    #trxViewDetailsBox .trx-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 20px 20px 14px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    #trxViewDetailsBox .trx-title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.35;
+        font-weight: 700;
+        color: #101826;
+    }
+
+    #trxViewDetailsBox .trx-type {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #586579;
+    }
+
+    #trxViewDetailsBox .trx-modal-body {
+        max-height: calc(100vh - 240px);
+        overflow: auto;
+        padding: 16px 20px 12px;
+    }
+
+    #trxViewDetailsBox .trx-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    @media (max-width: 640px) {
+        #trxViewDetailsBox { padding: 12px; }
+        #trxViewDetailsBox .trx-info-grid { grid-template-columns: 1fr; }
+    }
+
+    #trxViewDetailsBox .trx-item {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    #trxViewDetailsBox .trx-item.full {
+        grid-column: 1 / -1;
+    }
+
+    #trxViewDetailsBox .trx-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #5d6a80;
+        margin-bottom: 4px;
+    }
+
+    #trxViewDetailsBox .trx-value {
+        font-size: 14px;
+        color: #152238;
+        word-break: break-word;
+        line-height: 1.4;
+    }
+
+    #trxViewDetailsBox .trx-modal-footer {
+        padding: 14px 20px 18px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    body.trx-modal-open {
+        overflow: hidden;
+    }
+</style>
 @endpush
 @section('content')
 <div class="row">
@@ -143,23 +248,21 @@
                             </div>
                             <div class="site-table-col">
                                 <div class="action">
-                                    <a href="javascript:void(0)"
-                                    class="icon-btn details-btn"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#trxViewDetailsBox"
-                                    data-title="{{ $transaction->description }}"
-                                    data-type="{{ $transaction->type->value }}"
-                                    data-time="{{ $transaction->created_at }}"
-                                    data-transaction-id="{{ $transaction->tnx }}"
-                                    data-transaction="{{ $transaction->manual_field_data }}"
-                                    data-message="{{ $transaction->action_message }}"
-                                    data-amount="{{ isPlusTransaction($transaction->type) == true ? '+' : '-' }}{{ $transaction->amount.' '.$currency }}"
-                                    data-charge="{{ $transaction->charge.' '.$currency  }}"
-                                    data-status="{{ $transaction->status->value }}"
-                                    data-method="{{ $transaction->method !== '' ? ucfirst(str_replace('-',' ',$transaction->method)) :  __('System') }}"
+                                    <button type="button"
+                                        class="icon-btn js-open-trx-modal"
+                                        data-title="{{ $transaction->description }}"
+                                        data-type="{{ $transaction->type->value }}"
+                                        data-time="{{ $transaction->created_at }}"
+                                        data-transaction-id="{{ $transaction->tnx }}"
+                                        data-transaction='@json($transaction->manual_field_data ? json_decode($transaction->manual_field_data, true) : [])'
+                                        data-message="{{ $transaction->action_message }}"
+                                        data-amount="{{ isPlusTransaction($transaction->type) == true ? '+' : '-' }}{{ $transaction->amount.' '.$currency }}"
+                                        data-charge="{{ $transaction->charge.' '.$currency  }}"
+                                        data-status="{{ $transaction->status->value }}"
+                                        data-method="{{ $transaction->method !== '' ? ucfirst(str_replace('-',' ',$transaction->method)) :  __('System') }}"
                                     >
                                         <i data-lucide="eye"></i>{{ __('Details') }}
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -171,55 +274,58 @@
                 </div>
 
                 <!-- Modal for Transaction View Details -->
-                <div class="modal fade" id="trxViewDetailsBox" tabindex="-1"
-                    aria-labelledby="trxViewDetailsBoxModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-md modal-dialog-centered">
-                        <div class="modal-content site-table-modal">
-                            <div class="modal-body popup-body">
-                                <button type="button" class="modal-btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"><i data-lucide="x"></i></button>
-                                <div class="popup-body-text">
-                                    <div class="title title-value"></div>
-                                    <div class="modal-beneficiary-details">
-                                        <div class="profile-text-data">
-                                            <div class="attribute">{{ __('Time') }}</div>
-                                            <div class="value time-value"></div>
-                                        </div>
-                                        <div class="profile-text-data">
-                                            <div class="attribute">{{ __('Transaction ID') }}</div>
-                                            <div class="value trx-value"></div>
-                                        </div>
-                                        <div class="profile-text-data">
-                                            <div class="attribute">{{ __('Amount') }}</div>
-                                            <div class="value green-color amount-value"></div>
-                                        </div>
-                                        <div class="profile-text-data">
-                                            <div class="attribute">{{ __('Charge') }}</div>
-                                            <div class="value red-color charge-value"></div>
-                                        </div>
-                                        <div class="profile-text-data">
-                                            <div class="attribute">{{ __('Status') }}</div>
-                                            <div class="value status-value"></div>
-                                        </div>
-                                        <div class="profile-text-data">
-                                            <div class="attribute">{{ __('Method') }}</div>
-                                            <div class="value method-value"></div>
-                                        </div>
-                                        <div class="custom-fields"></div>
-
-                                        <div class="profile-text-data">
-                                            <div class="attribute message-value"></div>
-                                        </div>
-                                    </div>
-                                    <div class="action-btns mt-3">
-                                        <a href="" class="site-btn-sm polis-btn" data-bs-dismiss="modal"
-                                            aria-label="Close">
-                                            <i data-lucide="check"></i>
-                                            {{ __('Close it') }}
-                                        </a>
-                                    </div>
-                                </div>
+                <div id="trxViewDetailsBox" class="modal" aria-hidden="true">
+                    <div class="trx-modal-dialog" role="dialog" aria-modal="true" aria-label="{{ __('Transaction Details') }}">
+                        <div class="trx-modal-header">
+                            <div>
+                                <h3 class="trx-title title-value"></h3>
+                                <div class="trx-type type-value"></div>
                             </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="status-value"></div>
+                                <button type="button" class="modal-btn-close trx-modal-close" aria-label="Close">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="trx-modal-body">
+                            <div class="trx-info-grid">
+                                <div class="trx-item">
+                                    <div class="trx-label">{{ __('Time') }}</div>
+                                    <div class="trx-value time-value"></div>
+                                </div>
+                                <div class="trx-item">
+                                    <div class="trx-label">{{ __('Transaction ID') }}</div>
+                                    <div class="trx-value trx-value"></div>
+                                </div>
+                                <div class="trx-item">
+                                    <div class="trx-label">{{ __('Amount') }}</div>
+                                    <div class="trx-value green-color amount-value"></div>
+                                </div>
+                                <div class="trx-item">
+                                    <div class="trx-label">{{ __('Charge') }}</div>
+                                    <div class="trx-value red-color charge-value"></div>
+                                </div>
+                                <div class="trx-item">
+                                    <div class="trx-label">{{ __('Status') }}</div>
+                                    <div class="trx-value status-text-value"></div>
+                                </div>
+                                <div class="trx-item">
+                                    <div class="trx-label">{{ __('Method') }}</div>
+                                    <div class="trx-value method-value"></div>
+                                </div>
+                                <div class="trx-item full message-wrapper d-none">
+                                    <div class="trx-label">{{ __('Message') }}</div>
+                                    <div class="trx-value message-value"></div>
+                                </div>
+                                <div class="custom-fields full"></div>
+                            </div>
+                        </div>
+                        <div class="trx-modal-footer">
+                            <button type="button" class="site-btn-sm polis-btn trx-modal-close" aria-label="Close">
+                                <i data-lucide="check"></i>
+                                {{ __('Close it') }}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -249,47 +355,123 @@
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
-    // Set data for modal
-    $(document).on('click', '.details-btn', function (e) {
+    const $trxModal = $('#trxViewDetailsBox');
+    let trxModalBusy = false;
 
-        e.preventDefault();
+    // Ensure modal is not constrained by table/card wrappers with overflow/position rules.
+    if (!$trxModal.parent().is('body')) {
+        $('body').append($trxModal);
+    }
 
-        var id = $(this).data('id');
-        var title = $(this).data('title');
-        var type = $(this).data('type');
-        var time = $(this).data('time');
-        var trx = $(this).data('transaction-id');
-        var amount = $(this).data('amount');
-        var charge = $(this).data('charge');
-        var method = $(this).data('method');
-        var status = $(this).data('status');
-        var transaction = $(this).data('transaction');
+    function renderTransactionModal(trigger) {
+        var modal = $trxModal;
+        var title = trigger.data('title') || '';
+        var type = trigger.data('type') || '';
+        var time = trigger.data('time') || '';
+        var trx = trigger.data('transaction-id') || '';
+        var amount = trigger.data('amount') || '';
+        var charge = trigger.data('charge') || '';
+        var method = trigger.data('method') || '';
+        var status = trigger.data('status') || '';
+        var message = trigger.data('message') || '';
+        var transaction = trigger.data('transaction') || {};
 
-        var statusElement = '';
-        var additionalData = '';
-
-        $.each(transaction,function(key,value){
-            additionalData += '<div class="profile-text-data"><div class="attribute">'+capitalizeFirstLetter(key.replaceAll('_',' '))+'</div><div class="value">'+value+'</div></div>';
-        });
-
-        if(status == 'failed'){
-            statusElement += `<div class="type site-badge badge-failed">{{ __('Failed') }}</div>`
-        }else if(status == 'success'){
-            statusElement += `<div class="type site-badge badge-success">{{ __('Success') }}</div>`
-        }else{
-            statusElement += `<div class="type site-badge badge-pending">{{ __('Pending') }}</div>`
+        // Handle cases where jQuery returns JSON payload as string
+        if (typeof transaction === 'string') {
+            try {
+                transaction = JSON.parse(transaction);
+            } catch (e) {
+                transaction = {};
+            }
         }
 
-        $('.title-value').text(title);
-        $('.trx-value').text(trx);
-        $('.time-value').text(time);
-        $('.amount-value').text(amount);
-        $('.charge-value').text(charge);
-        $('.method-value').text(method);
-        $('.status-value').html(statusElement);
+        var statusElement;
+        var additionalData = '';
 
-        $('.custom-fields').html(additionalData);
+        function escapeHtml(value) {
+            return $('<div>').text(value ?? '').html();
+        }
 
+        if (transaction && typeof transaction === 'object') {
+            $.each(transaction, function (key, value) {
+                additionalData += '<div class="trx-item"><div class="trx-label">'
+                    + escapeHtml(capitalizeFirstLetter(String(key).replaceAll('_', ' ')))
+                    + '</div><div class="trx-value">'
+                    + escapeHtml(value)
+                    + '</div></div>';
+            });
+        }
+
+        if (status === 'failed') {
+            statusElement = `<div class="type site-badge badge-failed">{{ __('Failed') }}</div>`;
+        } else if (status === 'success') {
+            statusElement = `<div class="type site-badge badge-success">{{ __('Success') }}</div>`;
+        } else {
+            statusElement = `<div class="type site-badge badge-pending">{{ __('Pending') }}</div>`;
+        }
+
+        modal.find('.title-value').text(title);
+        modal.find('.type-value').text(type ? capitalizeFirstLetter(String(type).replaceAll('_', ' ')) : '');
+        modal.find('.trx-value').text(trx);
+        modal.find('.time-value').text(time);
+        modal.find('.amount-value').text(amount);
+        modal.find('.charge-value').text(charge);
+        modal.find('.method-value').text(method);
+        modal.find('.status-value').html(statusElement);
+        modal.find('.status-text-value').text(status ? capitalizeFirstLetter(String(status)) : '');
+        modal.find('.custom-fields').html(additionalData);
+        modal.find('.message-value').text(message);
+        modal.find('.message-wrapper').toggleClass('d-none', !message);
+    }
+
+    function openTrxModal() {
+        $trxModal.addClass('is-open').attr('aria-hidden', 'false');
+        $('body').addClass('trx-modal-open');
+        trxModalBusy = false;
+    }
+
+    function closeTrxModal() {
+        $trxModal.removeClass('is-open').attr('aria-hidden', 'true');
+        $('body').removeClass('trx-modal-open');
+
+        $trxModal.find('.title-value, .type-value, .trx-value, .time-value, .amount-value, .charge-value, .method-value, .message-value').text('');
+        $trxModal.find('.status-value, .custom-fields, .message-value, .status-text-value').empty();
+        $trxModal.find('.message-wrapper').addClass('d-none');
+        trxModalBusy = false;
+    }
+
+    // Open modal only after content is rendered to avoid visual flash.
+    $(document).off('click.trx', '.js-open-trx-modal').on('click.trx', '.js-open-trx-modal', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (trxModalBusy || $trxModal.hasClass('is-open')) {
+            return;
+        }
+
+        trxModalBusy = true;
+        var trigger = $(this);
+        renderTransactionModal(trigger);
+        requestAnimationFrame(openTrxModal);
+    });
+
+    $(document).off('click.trx.close', '.trx-modal-close').on('click.trx.close', '.trx-modal-close', function (e) {
+        e.preventDefault();
+        closeTrxModal();
+    });
+
+    // Click outside dialog closes modal.
+    $trxModal.off('click.trx.overlay').on('click.trx.overlay', function (e) {
+        if (e.target === this) {
+            closeTrxModal();
+        }
+    });
+
+    // ESC support.
+    $(document).off('keydown.trx.modal').on('keydown.trx.modal', function (e) {
+        if (e.key === 'Escape' && $trxModal.hasClass('is-open')) {
+            closeTrxModal();
+        }
     });
 
     // Reset filter

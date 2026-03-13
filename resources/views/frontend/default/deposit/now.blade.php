@@ -6,14 +6,29 @@
 @section('style')
     <style>
         .deposit-modern .site-card-body { gap: 1rem; }
-        .deposit-modern .deposit-form-panel { border: 1px solid rgba(15, 23, 42, .08); border-radius: 12px; padding: 1rem; background: #fff; }
+        .deposit-modern .deposit-form-panel {
+            border: 1px solid var(--bank-border-strong, rgba(15, 23, 42, .12));
+            border-radius: 12px;
+            padding: 1rem;
+            background: var(--bank-surface, #fff);
+        }
         .deposit-modern .inputs .input-label { font-weight: 600; margin-bottom: .45rem; }
         .deposit-modern .inputs .form-control,
         .deposit-modern .inputs .box-input,
         .deposit-modern .inputs .select2-selection { min-height: 44px; border-radius: 10px; }
-        .deposit-modern .review-card { border: 1px solid rgba(15, 23, 42, .08); border-radius: 12px; overflow: hidden; }
-        .deposit-modern .review-card .site-card-header { background: #f8fafc; }
-        .deposit-modern .review-card .site-table-list { padding: .7rem 1rem; border-bottom: 1px solid rgba(15, 23, 42, .06); }
+        .deposit-modern .review-card {
+            border: 1px solid var(--bank-border-strong, rgba(15, 23, 42, .12));
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+        .deposit-modern .review-card .site-card-header {
+            background: var(--bank-surface-soft, #f8fafc);
+            border-bottom: 1px solid var(--bank-border, rgba(15, 23, 42, .08));
+            margin-bottom: 0;
+            padding: .85rem 1rem;
+        }
+        .deposit-modern .review-card .site-table-list { padding: .75rem 1rem; border-bottom: 1px solid var(--bank-border, rgba(15, 23, 42, .08)); }
         .deposit-modern .review-card .site-table-list:last-child { border-bottom: 0; }
         .deposit-modern .gateway-logo-wrap {
             width: 72px;
@@ -21,8 +36,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #fff;
-            border: 1px solid rgba(15, 23, 42, .12);
+            background: var(--bank-surface, #fff);
+            border: 1px solid var(--bank-border-strong, rgba(15, 23, 42, .12));
             border-radius: 10px;
             overflow: hidden;
         }
@@ -35,7 +50,18 @@
             height: auto;
             object-fit: contain;
         }
-        .deposit-modern .pay-action-btn { width: 100%; margin-top: 1rem; }
+        .deposit-modern .manual-row { margin-top: .25rem; }
+        .deposit-modern .pay-action-btn { width: 100%; margin-top: 1rem; display: inline-flex; justify-content: center; align-items: center; }
+        .deposit-modern .select2-container { width: 100% !important; }
+
+        @media (max-width: 767px) {
+            .deposit-modern .deposit-form-panel,
+            .deposit-modern .review-card .site-table-list,
+            .deposit-modern .review-card .site-card-header {
+                padding-left: .85rem;
+                padding-right: .85rem;
+            }
+        }
     </style>
 @endsection
 
@@ -48,7 +74,7 @@
                     <div class="site-card-header">
                         <div class="title">{{ __('Add Money') }}</div>
                         <div class="card-header-links">
-                            <a href="{{ route('user.deposit.log') }}" class="card-header-link"><i data-lucide="alert-circle"></i>Deposit History</a>
+                            <a href="{{ route('user.deposit.log') }}" class="card-header-link"><i data-lucide="alert-circle"></i>{{ __('Deposit History') }}</a>
                         </div>
                     </div>
                     <div class="site-card-body">
@@ -76,9 +102,10 @@
                                         <div class="input-info-text min-max"></div>
                                     </div>
                                 </div>
+                                <div class="col-12">
+                                    <div class="row manual-row">
 
-                                <div class="row manual-row">
-
+                                    </div>
                                 </div>
                             </div>
                         </div>

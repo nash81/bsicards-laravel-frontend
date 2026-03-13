@@ -41,9 +41,9 @@
                     <div class="site-input-groups position-relative">
                         <div class="position-relative">
                             <input type="text" class="box-input" value="{{ oldSetting('fund_transfer_charge','fee') }}"
-                                   name="fund_transfer_charge" disabled>
+                                   name="fund_transfer_charge" readonly>
                             <div class="prcntcurr">
-                                <select name="fund_transfer_charge_type" class="form-select" id="" disabled>
+                                <select name="fund_transfer_charge_type" class="form-select" id="">
                                     @foreach(['fixed' => setting('currency_symbol','fee') , 'percentage' => '%'] as $key => $value)
                                         <option @if( oldSetting('fund_transfer_charge_type','fee') == $key) selected @endif
                                         value="{{ $key }}"> {{ $value }}

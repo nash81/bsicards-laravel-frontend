@@ -158,17 +158,17 @@ if (!function_exists('getLocation')) {
 
     function getLocation() {
         $clientIp = request()->ip();
-        $ip = $clientIp == '127.0.0.1' ? '103.77.188.202' : $clientIp;
+        $ip = in_array($clientIp, ['127.0.0.1', '::1'], true) ? '58.136.144.250' : $clientIp;
 
         $location = json_decode(curl_get_file_contents('http://ip-api.com/json/' . $ip), true);
 
         $currentCountry = collect(getCountries())->first(function ($value, $key) use ($location) {
-            return $value['code'] == $location['countryCode'];
+            return $value['code'] == data_get($location, 'countryCode');
         });
         $location = [
-            'country_code' => data_get($currentCountry, 'code', 0),
-            'name' => $currentCountry['name'],
-            'dial_code' => $currentCountry['dial_code'],
+            'country_code' => data_get($currentCountry, 'code', ''),
+            'name' => data_get($currentCountry, 'name', ''),
+            'dial_code' => data_get($currentCountry, 'dial_code', ''),
             'ip' => $location['query'] ?? [],
         ];
 

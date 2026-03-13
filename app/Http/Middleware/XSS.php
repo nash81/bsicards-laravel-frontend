@@ -15,12 +15,16 @@ class XSS
      */
     public function handle(Request $request, Closure $next)
     {
+        // Sanitize only normal input payload; do not touch uploaded files.
+        $userInput = $request->request->all();
 
-        $userInput = $request->all();
-        array_walk_recursive($userInput, function (&$userInput) {
-            $userInput = strip_tags($userInput);
+        array_walk_recursive($userInput, function (&$value) {
+            if (is_string($value)) {
+                $value = strip_tags($value);
+            }
         });
-        $request->merge($userInput);
+
+        $request->request->replace($userInput);
 
         return $next($request);
     }

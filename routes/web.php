@@ -241,6 +241,7 @@ Route::group(['controller' => StatusController::class, 'prefix' => 'status', 'as
 
 // Instant payment notification
 Route::group(['prefix' => 'ipn', 'as' => 'ipn.', 'controller' => IpnController::class], function () {
+    Route::post('stripe', 'stripeIpn')->name('stripe');
     Route::post('coinpayments', 'coinpaymentsIpn')->name('coinpayments');
     Route::post('nowpayments', 'nowpaymentsIpn')->name('nowpayments');
     Route::post('cryptomus', 'cryptomusIpn')->name('cryptomus');

@@ -1,6 +1,6 @@
 <?php
 
-namespace Payment\Coinbase;
+namespace Payment\Paystack;
 
 use Payment\Transaction\BaseTxn;
 
@@ -19,6 +19,7 @@ class PaystackTxn extends BaseTxn
             'email' => $this->userEmail,
             'currency' => $this->currency,
             'orderID' => $this->txn,
+            'callback' => route('ipn.paystack'),
         ];
 
         return \Unicodeveloper\Paystack\Facades\Paystack::getAuthorizationUrl($data)->redirectNow();

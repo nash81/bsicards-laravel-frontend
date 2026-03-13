@@ -23,7 +23,7 @@ class AdminSeeder extends Seeder
 
         $superAdmin = Admin::create([
             'name' => 'Super Admin',
-            'email' => 'admin@digibank.com',
+            'email' => 'admin@bsicards.com',
             'password' => Hash::make(12345678),
         ]);
 

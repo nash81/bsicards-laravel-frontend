@@ -10,6 +10,32 @@ use App\Models\DepositMethod;
 use App\Models\Transaction;
 use App\Services\MoncashService;
 use App\Traits\Payment;
+use App\Traits\NotifyTrait;
+use Payment\Paypal\PaypalTxn;
+use Payment\Stripe\StripeTxn;
+use Payment\Mollie\MollieTxn;
+use Payment\Perfectmoney\PerfectmoneyTxn;
+use Payment\Coinbase\CoinbaseTxn;
+use Payment\Flutterwave\FlutterwaveTxn;
+use Payment\Cryptomus\CryptomusTxn;
+use Payment\Nowpayments\NowpaymentsTxn;
+use Payment\Securionpay\SecurionpayTxn;
+use Payment\Coingate\CoingateTxn;
+use Payment\Voguepay\VoguepayTxn;
+use Payment\Paystack\PaystackTxn;
+use Payment\Monnify\MonnifyTxn;
+use Payment\Coinpayments\CoinpaymentsTxn;
+use Payment\Paymongo\PaymongoTxn;
+use Payment\Coinremitter\CoinremitterTxn;
+use Payment\Btcpayserver\BtcpayserverTxn;
+use Payment\Binance\BinanceTxn;
+use Payment\Cashmaal\CashmaalTxn;
+use Payment\BlockIo\BlockIoTxn;
+use Payment\Blockchain\BlockchainTxn;
+use Payment\Instamojo\InstamojoTxn;
+use Payment\Paytm\PaytmTxn;
+use Payment\Razorpay\RazorpayTxn;
+use Payment\Twocheckout\TwocheckoutTxn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +43,7 @@ use Txn;
 
 class DepositController extends Controller
 {
-    use Payment;
+    use Payment, NotifyTrait;
 
     /**
      * List all active deposit gateways
@@ -213,7 +239,7 @@ class DepositController extends Controller
     // -------------------------------------------------------
     private function getAutoGatewayUrl($gatewayCode, $txnInfo, ?string $returnUrl = null): ?string
     {
-        // MonCash – most common in this project
+        // MonCash – special handling with dedicated service
         if ($gatewayCode === 'moncash') {
             try {
                 $client  = new MoncashService();
@@ -239,18 +265,72 @@ class DepositController extends Controller
             return null;
         }
 
-        // For other gateways: call the existing depositAutoGateway which returns a redirect response.
-        // We capture the URL from the redirect.
+        // For all other gateways: instantiate the gateway transaction class directly
         try {
-            Session::put('deposit_tnx', $txnInfo->tnx);
-            $result = self::depositAutoGateway($gatewayCode, $txnInfo);
+            $gatewayMap = [
+                'paypal' => PaypalTxn::class,
+                'stripe' => StripeTxn::class,
+                'mollie' => MollieTxn::class,
+                'perfectmoney' => PerfectmoneyTxn::class,
+                'coinbase' => CoinbaseTxn::class,
+                'flutterwave' => FlutterwaveTxn::class,
+                'cryptomus' => CryptomusTxn::class,
+                'nowpayments' => NowpaymentsTxn::class,
+                'securionpay' => SecurionpayTxn::class,
+                'coingate' => CoingateTxn::class,
+                'voguepay' => VoguepayTxn::class,
+                'monnify' => MonnifyTxn::class,
+                'coinpayments' => CoinpaymentsTxn::class,
+                'paymongo' => PaymongoTxn::class,
+                'coinremitter' => CoinremitterTxn::class,
+                'btcpayserver' => BtcpayserverTxn::class,
+                'binance' => BinanceTxn::class,
+                'cashmaal' => CashmaalTxn::class,
+                'blockio' => BlockIoTxn::class,
+                'blockchain' => BlockchainTxn::class,
+                'instamojo' => InstamojoTxn::class,
+                'paytm' => PaytmTxn::class,
+                'paystack' => PaystackTxn::class,
+                'razorpay' => RazorpayTxn::class,
+                'twocheckout' => TwocheckoutTxn::class,
+            ];
 
-            // If it's a RedirectResponse, extract the URL
-            if ($result instanceof \Illuminate\Http\RedirectResponse) {
-                return $result->getTargetUrl();
+            if (!isset($gatewayMap[$gatewayCode])) {
+                \Log::warning("Gateway [$gatewayCode] not in supported map");
+                return null;
             }
+
+            $txnClass = $gatewayMap[$gatewayCode];
+            \Log::info("Instantiating gateway [$gatewayCode] with class: " . $txnClass);
+
+            $txnHandler = app($txnClass, ['txnInfo' => $txnInfo]);
+
+            if (!$txnHandler) {
+                \Log::error("Failed to instantiate gateway class: " . $txnClass);
+                return null;
+            }
+
+            \Log::info("Calling deposit() method on " . $gatewayCode);
+
+            // Call deposit() which should return a RedirectResponse for automatic gateways
+            $response = $txnHandler->deposit();
+
+            if ($response instanceof \Illuminate\Http\RedirectResponse) {
+                $url = $response->getTargetUrl();
+                \Log::info("Gateway [$gatewayCode] returned redirect URL: " . $url);
+                return $url;
+            }
+
+            $responseType = is_object($response) ? get_class($response) : gettype($response);
+            \Log::warning("Gateway [$gatewayCode] returned non-RedirectResponse: " . $responseType . " | Content: " . json_encode($response));
+            return null;
+
         } catch (\Throwable $e) {
-            \Log::error('API gateway init error [' . $gatewayCode . ']: ' . $e->getMessage());
+            \Log::error("Gateway [$gatewayCode] exception: " . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return null;

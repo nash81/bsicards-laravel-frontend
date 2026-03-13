@@ -2,6 +2,76 @@
 @section('title')
     {{ __('Withdraw Now') }}
 @endsection
+
+@section('style')
+    <style>
+        .withdraw-modern .withdraw-form-panel {
+            border: 1px solid var(--bank-border-strong, rgba(15, 23, 42, .12));
+            border-radius: 12px;
+            padding: 1rem;
+            background: var(--bank-surface, #fff);
+        }
+        .withdraw-modern .inputs .input-label { font-weight: 600; margin-bottom: .45rem; }
+        .withdraw-modern .inputs .form-control,
+        .withdraw-modern .inputs .box-input,
+        .withdraw-modern .inputs .select2-selection { min-height: 44px; border-radius: 10px; }
+        .withdraw-modern .review-card {
+            border: 1px solid var(--bank-border-strong, rgba(15, 23, 42, .12));
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+        .withdraw-modern .review-card .site-card-header {
+            background: var(--bank-surface-soft, #f8fafc);
+            border-bottom: 1px solid var(--bank-border, rgba(15, 23, 42, .08));
+            margin-bottom: 0;
+            padding: .85rem 1rem;
+        }
+        .withdraw-modern .review-card .site-table-list {
+            padding: .75rem 1rem;
+            border-bottom: 1px solid var(--bank-border, rgba(15, 23, 42, .08));
+        }
+        .withdraw-modern .review-card .site-table-list:last-child { border-bottom: 0; }
+        .withdraw-modern .gateway-logo-wrap {
+            width: 72px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bank-surface, #fff);
+            border: 1px solid var(--bank-border-strong, rgba(15, 23, 42, .12));
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .withdraw-modern .gateway-logo-wrap img,
+        .withdraw-modern .table-icon {
+            max-width: 64px;
+            max-height: 32px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+        .withdraw-modern .withdraw-action-btn {
+            width: 100%;
+            margin-top: 1rem;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: .45rem;
+        }
+        .withdraw-modern .select2-container { width: 100% !important; }
+
+        @media (max-width: 767px) {
+            .withdraw-modern .withdraw-form-panel,
+            .withdraw-modern .review-card .site-table-list,
+            .withdraw-modern .review-card .site-card-header {
+                padding-left: .85rem;
+                padding-right: .85rem;
+            }
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-12">
@@ -20,10 +90,10 @@
                         </div>
                     </div>
                 </div>
-                <form action="{{ route('user.withdraw.now') }}" method="post">
+                <form action="{{ route('user.withdraw.now') }}" method="post" class="withdraw-modern">
                     @csrf
                     <div class="site-card-body">
-                        <div class="step-details-form mb-4">
+                        <div class="step-details-form mb-4 withdraw-form-panel">
 
                             <div class="row">
                                 <div class="col-xl-6 col-lg-6 col-md-6">
@@ -64,7 +134,7 @@
                             </div>
 
                         </div>
-                        <div class="site-card">
+                        <div class="site-card review-card">
                             <div class="site-card-header">
                                 <div class="title-small">{{ __('Preview:') }}</div>
                             </div>
@@ -105,7 +175,7 @@
                                             </div>
                                             <div class="site-table-col">
                                                 <div class="fw-bold" id="logo">
-                                                    <img class="table-icon" src="" alt=""/>
+                                                    <span class="gateway-logo-wrap"><img class="table-icon" src="" alt="Gateway"/></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -137,7 +207,7 @@
                             @else
                             type="submit"
                             @endif
-                            class="site-btn polis-btn"
+                            class="site-btn polis-btn withdraw-action-btn"
                         >
                             <i data-lucide="download"></i>{{ __('Withdraw Money') }}
                         </button>
@@ -223,7 +293,7 @@
                     $('.processing-time').text(info.processing_time);
                     $('.method').html('<span class="type site-badge badge-primary">'+info.name+'</span>');
                     $('.method').show();
-                    $('#logo').html(info.logo);
+                    $('#logo').html('<span class="gateway-logo-wrap">'+info.logo+'</span>');
                 })
             }
 

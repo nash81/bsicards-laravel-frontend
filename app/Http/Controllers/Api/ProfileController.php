@@ -115,7 +115,7 @@ class ProfileController extends Controller
                 'charge'       => (float) $t->charge,
                 'final_amount' => (float) $t->final_amount,
                 'status'       => $t->status instanceof \BackedEnum ? $t->status->value : $t->status,
-                'created_at'   => $t->attributes['created_at'],
+                'created_at'   => $t->attributes['created_at'] ?? (string) $t->created_at,
             ]);
 
         return response()->json([
@@ -129,6 +129,13 @@ class ProfileController extends Controller
     // -------------------------------------------------------
     private function buildProfile($user): array
     {
+        $avatar = null;
+        if (!empty($user->avatar)) {
+            $avatar = str_starts_with($user->avatar, 'http')
+                ? $user->avatar
+                : Storage::disk('public')->url(ltrim($user->avatar, '/'));
+        }
+
         return [
             'id'              => $user->id,
             'first_name'      => $user->first_name,
@@ -143,9 +150,7 @@ class ProfileController extends Controller
             'zip_code'        => $user->zip_code,
             'gender'          => $user->gender,
             'date_of_birth'   => $user->date_of_birth,
-            'avatar'          => $user->avatar
-                ? asset('storage/' . $user->avatar)
-                : asset('assets/images/default.png'),
+            'avatar'          => $avatar,
             'account_number'  => $user->account_number,
             'balance'         => (float) $user->balance,
             'currency_symbol' => setting('currency_symbol', 'global'),

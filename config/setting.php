@@ -373,15 +373,15 @@ return [
                 'data' => 'double', // data type, string, int, boolean
                 'name' => 'fund_transfer_charge', // unique name for field
                 'label' => 'Fund Transfer Charge', // you know what label it is
-                'rules' => 'required|regex:/^\d+(\.\d{1,2})?$/', // validation rule of laravel
+                'rules' => 'nullable|regex:/^\d+(\.\d{1,2})?$/', // validation rule of laravel
                 'value' => 4, // default value if you want
             ],
             [
                 'type' => 'text', // input fields type
-                'data' => 'double', // data type, string, int, boolean
+                'data' => 'string', // data type, string, int, boolean
                 'name' => 'fund_transfer_charge_type', // unique name for field
                 'label' => 'Fund Transfer Charge Type', // you know what label it is
-                'rules' => 'required|regex:/^\d+(\.\d{1,2})?$/', // validation rule of laravel
+                'rules' => 'nullable|in:fixed,percentage', // validation rule of laravel
                 'value' => 'percentage', // default value if you want
             ],
         ],

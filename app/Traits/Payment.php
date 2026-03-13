@@ -104,9 +104,16 @@ trait Payment
             'strong' => 'Transaction ID: '.$tnx,
             'action' => route('user.deposit.amount'),
             'a' => 'Deposit again',
+            'status' => strtolower($status),
         ];
 
         if ($status == 'Pending') {
+            $notify['card-header'] = 'Deposit Pending Review';
+            $notify['title'] = "$symbol $tnxInfo->amount Manual Deposit Submitted";
+            $notify['p'] = 'Your payment proof has been submitted successfully and is now pending admin review.';
+            $notify['action'] = route('user.deposit.log');
+            $notify['a'] = 'View deposit history';
+
             $shortcodes = [
                 '[[full_name]]' => $tnxInfo->user->full_name,
                 '[[txn]]' => $tnxInfo->tnx,

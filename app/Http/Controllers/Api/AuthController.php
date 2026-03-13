@@ -11,6 +11,7 @@ use App\Traits\NotifyTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use Txn;
@@ -185,6 +186,13 @@ class AuthController extends Controller
     // -------------------------------------------------------
     private function userProfile(User $user): array
     {
+        $avatar = null;
+        if (!empty($user->avatar)) {
+            $avatar = str_starts_with($user->avatar, 'http')
+                ? $user->avatar
+                : Storage::disk('public')->url(ltrim($user->avatar, '/'));
+        }
+
         return [
             'id'           => $user->id,
             'first_name'   => $user->first_name,
@@ -199,7 +207,7 @@ class AuthController extends Controller
             'zip_code'     => $user->zip_code,
             'gender'       => $user->gender,
             'date_of_birth'=> $user->date_of_birth,
-            'avatar'       => $user->avatar ? asset('storage/' . $user->avatar) : asset('assets/images/default.png'),
+            'avatar'       => $avatar ?: asset('assets/images/default.png'),
             'account_number' => $user->account_number,
             'balance'      => (float) $user->balance,
             'kyc'          => $user->kyc,

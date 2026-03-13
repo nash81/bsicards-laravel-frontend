@@ -30,6 +30,10 @@ class StripeTxn extends BaseTxn
             'mode' => 'payment',
             'success_url' => route('status.success', ['reftrn' => Crypt::encryptString($this->txn)]),
             'cancel_url' => route('status.cancel'),
+            'metadata' => [
+                'txn' => $this->txn,
+                'user_id' => $this->userId ?? null,
+            ],
         ]);
 
         return redirect($session->url);

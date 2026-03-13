@@ -371,4 +371,90 @@ class IpnController extends Controller
             $this->paymentSuccess($request->li_0_product_id);
         }
     }
+
+    public function stripeIpn(Request $request)
+    {
+        $payload = $request->getContent();
+        $stripeCredential = gateway_info('stripe');
+        $sig_header = $request->header('Stripe-Signature');
+        $endpoint_secret = $stripeCredential->stripe_webhook_secret ?? null;
+
+        if (!$endpoint_secret) {
+            \Log::warning('Stripe webhook secret not configured');
+            return response('Webhook secret not configured', 400);
+        }
+
+        try {
+            $event = \Stripe\Webhook::constructEvent(
+                $payload,
+                $sig_header,
+                $endpoint_secret
+            );
+        } catch (\UnexpectedValueException $e) {
+            \Log::error('Invalid Stripe webhook payload: ' . $e->getMessage());
+            return response('Invalid payload', 400);
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            \Log::error('Invalid Stripe webhook signature: ' . $e->getMessage());
+            return response('Invalid signature', 400);
+        }
+
+        // Handle the event
+        switch ($event->type) {
+            case 'charge.succeeded':
+                $charge = $event->data->object;
+                $txn = $charge->metadata['txn'] ?? $charge->description;
+                if ($txn) {
+                    \Log::info("Stripe charge succeeded for txn: {$txn}");
+                    self::paymentSuccess($txn);
+                }
+                break;
+
+            case 'charge.failed':
+                $charge = $event->data->object;
+                $txn = $charge->metadata['txn'] ?? $charge->description;
+                if ($txn) {
+                    \Log::info("Stripe charge failed for txn: {$txn}");
+                    $transaction = Transaction::tnx($txn);
+                    if ($transaction) {
+                        $transaction->update(['status' => TxnStatus::Failed]);
+                    }
+                }
+                break;
+
+            case 'payment_intent.succeeded':
+                $paymentIntent = $event->data->object;
+                // Extract txn from metadata or description
+                $txn = $paymentIntent->metadata['txn'] ?? null;
+                $charges = $paymentIntent->charges->data;
+
+                if (!$txn && !empty($charges)) {
+                    // Try to get txn from charge
+                    $txn = $charges[0]->metadata['txn'] ?? $charges[0]->description;
+                }
+
+                if ($txn) {
+                    \Log::info("Stripe payment intent succeeded for txn: {$txn}");
+                    self::paymentSuccess($txn);
+                }
+                break;
+
+            case 'payment_intent.payment_failed':
+                $paymentIntent = $event->data->object;
+                $txn = $paymentIntent->metadata['txn'] ?? null;
+
+                if ($txn) {
+                    \Log::info("Stripe payment intent failed for txn: {$txn}");
+                    $transaction = Transaction::tnx($txn);
+                    if ($transaction) {
+                        $transaction->update(['status' => TxnStatus::Failed]);
+                    }
+                }
+                break;
+
+            default:
+                \Log::debug("Unhandled Stripe webhook event type: {$event->type}");
+        }
+
+        return response('Webhook processed', 200);
+    }
 }

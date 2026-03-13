@@ -24,7 +24,19 @@ class TransactionController extends Controller
         $to    = $request->get('to');    // YYYY-MM-DD
 
         $query = Transaction::where('user_id', $user->id)
-            ->when($type && $type !== 'all', fn($q) => $q->where('type', $type))
+            ->when($type && $type !== 'all', function ($q) use ($type) {
+                if ($type === TxnType::Deposit->value) {
+                    $q->whereIn('type', [TxnType::Deposit->value, TxnType::ManualDeposit->value]);
+                    return;
+                }
+
+                if ($type === TxnType::Withdraw->value) {
+                    $q->whereIn('type', [TxnType::Withdraw->value, TxnType::WithdrawAuto->value]);
+                    return;
+                }
+
+                $q->where('type', $type);
+            })
             ->when($from, fn($q) => $q->whereDate('created_at', '>=', Carbon::parse($from)->format('Y-m-d')))
             ->when($to,   fn($q) => $q->whereDate('created_at', '<=', Carbon::parse($to)->format('Y-m-d')))
             ->when($request->get('search'), function ($q) use ($request) {
