@@ -28,13 +28,6 @@ Modern Flutter mobile client for the BSI Cards Laravel backend APIs.
 2. Run `flutter pub get` to install dependencies.
 3. Launch the app with `flutter run`.
 
-## Backend API Base URL
-Update `lib/config/app_config.dart`:
-
-```dart
-static const String baseUrl = 'https://your-domain.com/api/v1';
-```
-
 ## Run Locally
 ```bash
 flutter pub get
