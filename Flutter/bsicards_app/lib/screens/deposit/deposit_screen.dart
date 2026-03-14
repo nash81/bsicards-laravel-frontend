@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../config/app_colors.dart';
 import '../../config/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/gateway.dart';
@@ -109,21 +110,22 @@ class _DepositScreenState extends State<DepositScreen> {
   @override
   Widget build(BuildContext context) {
     final tr = context.tr;
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: colors.bgDark,
       appBar: AppBar(title: Text(tr('add_money'))),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+          ? Center(child: CircularProgressIndicator(color: colors.primary))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(tr('select_payment_gateway'),
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary))
+                          color: colors.textPrimary))
                       .animate().fadeIn(),
                   const SizedBox(height: 16),
                   _gatewayGrid(),
@@ -149,6 +151,7 @@ class _DepositScreenState extends State<DepositScreen> {
       ),
       itemCount: _gateways.length,
       itemBuilder: (_, i) {
+        final colors = context.colors;
         final gw = _gateways[i];
         final isSelected = _selected?.id == gw.id;
         return GestureDetector(
@@ -157,11 +160,11 @@ class _DepositScreenState extends State<DepositScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppTheme.primary.withValues(alpha: 0.15)
-                  : AppTheme.bgCard,
+                  ? colors.primary.withValues(alpha: 0.15)
+                  : colors.bgCard,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isSelected ? AppTheme.primary : AppTheme.divider,
+                color: isSelected ? colors.primary : colors.divider,
                 width: isSelected ? 1.5 : 1,
               ),
             ),
@@ -175,15 +178,15 @@ class _DepositScreenState extends State<DepositScreen> {
                     _gatewayLogo(gw),
                     const Spacer(),
                     if (isSelected)
-                      const Icon(Icons.check_circle,
-                          color: AppTheme.primary, size: 18),
+                      Icon(Icons.check_circle,
+                          color: colors.primary, size: 18),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
                   gw.name,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                  style: TextStyle(
+                      color: colors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 13),
                   maxLines: 1,
@@ -191,8 +194,8 @@ class _DepositScreenState extends State<DepositScreen> {
                 ),
                 Text(
                   gw.currency,
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 11),
+                  style: TextStyle(
+                      color: colors.textSecondary, fontSize: 11),
                 ),
               ],
             ),
@@ -206,6 +209,7 @@ class _DepositScreenState extends State<DepositScreen> {
   }
 
   Widget _gatewayLogo(Gateway gw) {
+    final colors = context.colors;
     return Container(
       width: 36,
       height: 36,
@@ -220,34 +224,35 @@ class _DepositScreenState extends State<DepositScreen> {
               fit: BoxFit.contain,
               loadingBuilder: (_, child, progress) => progress == null
                   ? child
-                  : const Center(
+                  : Center(
                       child: SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
-                            strokeWidth: 1.5, color: AppTheme.primary),
+                            strokeWidth: 1.5, color: colors.primary),
                       ),
                     ),
-              errorBuilder: (_, __, ___) => const Icon(
+              errorBuilder: (_, __, ___) => Icon(
                 Icons.payment,
-                color: AppTheme.primary,
+                color: colors.primary,
                 size: 20,
               ),
             )
-          : const Icon(Icons.payment, color: AppTheme.primary, size: 20),
+          : Icon(Icons.payment, color: colors.primary, size: 20),
     );
   }
 
   Widget _amountSection() {
+    final colors = context.colors;
     final gw = _selected!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('${context.tr('amount_in')} ${gw.currency}',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary))
+                color: colors.textPrimary))
             .animate().fadeIn(),
         const SizedBox(height: 12),
         AppTextField(
@@ -261,7 +266,7 @@ class _DepositScreenState extends State<DepositScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -288,15 +293,16 @@ class _DepositScreenState extends State<DepositScreen> {
   }
 
   Widget _feeRow(String label, String value) {
+    final colors = context.colors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label,
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 13)),
+            style: TextStyle(
+                color: colors.textSecondary, fontSize: 13)),
         Text(value,
-            style: const TextStyle(
-                color: AppTheme.textPrimary,
+            style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600)),
       ],
@@ -346,6 +352,7 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
   @override
   Widget build(BuildContext context) {
     final tr = context.tr;
+    final colors = context.colors;
     final tnx = (widget.payload['tnx'] ?? '').toString();
     final currency = (widget.payload['currency'] ?? '').toString();
     final amount = _asDouble(widget.payload['amount']);
@@ -357,7 +364,7 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
     final fields = _parseFieldOptions(widget.payload['field_options']);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: colors.bgDark,
       appBar: AppBar(title: Text(tr('manual_deposit'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -367,7 +374,7 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(message,
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13)),
               const SizedBox(height: 14),
               _summaryCard(
                 context,
@@ -381,8 +388,8 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
               ),
               const SizedBox(height: 14),
               Text(tr('payment_details'),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   )),
@@ -391,12 +398,12 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   details.isEmpty ? '-' : details,
-                  style: const TextStyle(color: AppTheme.textSecondary, height: 1.4),
+                  style: TextStyle(color: colors.textSecondary, height: 1.4),
                 ),
               ),
               if (fields.isNotEmpty) ...[
@@ -437,7 +444,7 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
               const SizedBox(height: 6),
               Text(
                 _proofPath!.split('\\').last,
-                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
               ),
             ],
             if (isRequired && _proofPath == null)
@@ -522,11 +529,12 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
   }
 
   Widget _summaryCard(BuildContext context, {required List<_SummaryRow> rows}) {
+    final colors = context.colors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -538,13 +546,13 @@ class _ManualDepositProofScreenState extends State<ManualDepositProofScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(row.label,
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 13)),
                     Flexible(
                       child: Text(
                         row.value,
                         textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          color: AppTheme.textPrimary,
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -748,13 +756,14 @@ class _PaymentWebViewState extends State<PaymentWebView> {
   @override
   Widget build(BuildContext context) {
     final tr = context.tr;
+    final colors = context.colors;
     return Scaffold(
       appBar: AppBar(
         title: Text(tr('complete_payment')),
         actions: [
           TextButton(
             onPressed: () => _checkStatus(),
-            child: Text(tr('done'), style: const TextStyle(color: AppTheme.primary)),
+            child: Text(tr('done'), style: TextStyle(color: colors.primary)),
           ),
         ],
       ),
@@ -763,9 +772,9 @@ class _PaymentWebViewState extends State<PaymentWebView> {
           WebViewWidget(controller: _controller),
           if (_isLoading)
             Container(
-              color: AppTheme.bgDark,
-              child: const Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
+              color: colors.bgDark,
+              child: Center(
+                child: CircularProgressIndicator(color: colors.primary),
               ),
             ),
         ],

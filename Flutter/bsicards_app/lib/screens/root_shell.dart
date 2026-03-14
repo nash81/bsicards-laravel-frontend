@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
-import '../config/app_theme.dart';
+import '../config/app_colors.dart';
 import '../providers/auth_provider.dart';
 import 'cards/cards_home_screen.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -96,7 +96,7 @@ class _RootShellState extends State<RootShell> with WidgetsBindingObserver {
           body: _buildPage(_index),
           floatingActionButton: _index == 0
               ? FloatingActionButton(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: context.colors.primary,
                   child: const Icon(Icons.notifications_outlined),
                   onPressed: () {
                     Navigator.of(context).push(
@@ -140,17 +140,17 @@ class _RootShellState extends State<RootShell> with WidgetsBindingObserver {
         if (_locked)
           Positioned.fill(
             child: Container(
-              color: AppTheme.bgDark.withValues(alpha: 0.96),
+              color: context.colors.bgDark.withValues(alpha: 0.96),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.fingerprint, size: 46, color: AppTheme.primary),
+                    Icon(Icons.fingerprint, size: 46, color: context.colors.primary),
                     const SizedBox(height: 12),
                     Text(
                       tr('unlock_with_biometrics'),
                       style: TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),

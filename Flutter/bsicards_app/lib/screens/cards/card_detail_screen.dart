@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../../config/app_colors.dart';
 import '../../config/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/virtual_card.dart';
@@ -162,12 +163,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showCopyToast(String message) {
+    final colors = context.colors;
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
-      backgroundColor: AppTheme.bgCard,
-      textColor: AppTheme.textPrimary,
+      backgroundColor: colors.bgCard,
+      textColor: colors.textPrimary,
       fontSize: 13,
     );
   }
@@ -175,105 +177,108 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   void _showQrPreview(CardDepositAddress item) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppTheme.bgCard,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppTheme.divider),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.28),
-                blurRadius: 28,
-                offset: const Offset(0, 16),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      item.asset,
-                      style: const TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
+      builder: (_) {
+        final colors = context.colors;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: colors.divider),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.28),
+                  blurRadius: 28,
+                  offset: const Offset(0, 16),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        item.asset,
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      item.network,
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        item.network,
+                        style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close, color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 240,
+                  height: 240,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppTheme.textSecondary),
+                  child: QrImageView(
+                    data: item.address,
+                    version: QrVersions.auto,
+                    backgroundColor: Colors.white,
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: 240,
-                height: 240,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: QrImageView(
-                  data: item.address,
-                  version: QrVersions.auto,
-                  backgroundColor: Colors.white,
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceLight,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colors.divider),
+                  ),
+                  child: SelectableText(
+                    item.address,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: colors.textPrimary, fontSize: 13, height: 1.45),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceLight,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.divider),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    label: context.tr('copy_address'),
+                    icon: Icons.copy_rounded,
+                    onTap: () async {
+                      await Clipboard.setData(ClipboardData(text: item.address));
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                       _showCopyToast(context.tr('address_copied'));
+                    },
+                  ),
                 ),
-                child: SelectableText(
-                  item.address,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13, height: 1.45),
-                ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  label: context.tr('copy_address'),
-                  icon: Icons.copy_rounded,
-                  onTap: () async {
-                    await Clipboard.setData(ClipboardData(text: item.address));
-                    if (!mounted) return;
-                    Navigator.pop(context);
-                     _showCopyToast(context.tr('address_copied'));
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -290,13 +295,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: context.colors.bgCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => StatefulBuilder(
         builder: (sheetCtx, setSheetState) {
+          final colors = context.colors;
           bool sheetLoading = false;
 
           Future<void> doLoad() async {
@@ -318,7 +324,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   child: Container(
                     width: 40, height: 4,
                     decoration: BoxDecoration(
-                      color: AppTheme.divider,
+                      color: colors.divider,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -328,16 +334,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary)),
+                        color: colors.textPrimary)),
                 const SizedBox(height: 6),
                 Text('${context.tr('card')}: ${widget.card.maskedNumber}',
-                    style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 13)),
+                    style: TextStyle(
+                        color: colors.textSecondary, fontSize: 13)),
                 const SizedBox(height: 10),
                 if (widget.card.cardType == 'digital') ...[
                   Text(
                     context.tr('choose_deposit_rail_below'),
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 14),
                   if ((_detail?.depositAddresses.isEmpty ?? true))
@@ -345,13 +351,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceLight,
+                        color: colors.surfaceLight,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.divider),
+                        border: Border.all(color: colors.divider),
                       ),
                       child: Text(
                         context.tr('no_deposit_addresses_available'),
-                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 12),
                       ),
                     )
                   else
@@ -380,7 +386,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ] else ...[
                   Text(
                     '${context.tr('fund_loading_fee_of')} ${((loadFee ?? 0)).toStringAsFixed(2)}% ${context.tr('will_be_charged')}',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
@@ -423,13 +429,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     bool submitting = false;
     await showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: context.colors.bgCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetCtx) => StatefulBuilder(
-        builder: (_, setSheetState) => Padding(
+        builder: (_, setSheetState) {
+          final colors = context.colors;
+          return Padding(
           padding: EdgeInsets.only(
             left: 24,
             right: 24,
@@ -445,7 +453,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.divider,
+                    color: colors.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -454,7 +462,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               Text(
                 context.tr('create_addon_card'),
                 style: TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -462,8 +470,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               const SizedBox(height: 12),
               Text(
                 '${context.tr('addon_card_fee_of')} \$${digifee.toStringAsFixed(2)} ${context.tr('would_apply_continue')}',
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
+                style: TextStyle(
+                  color: colors.textSecondary,
                   fontSize: 13,
                   height: 1.45,
                 ),
@@ -513,20 +521,20 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
+                  color: colors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                  border: Border.all(color: colors.primary.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.info_outline, color: AppTheme.primary, size: 16),
+                    Icon(Icons.info_outline, color: colors.primary, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         context.tr('addon_cards_share_same_balance'),
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: colors.textSecondary,
                           fontSize: 12,
                           height: 1.35,
                         ),
@@ -537,7 +545,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               ),
             ],
           ),
-        ),
+        );}
       ),
     );
   }
@@ -551,7 +559,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     return PopScope(
       onPopInvokedWithResult: (_, __) => _dismissKeyboard(),
       child: Scaffold(
-        backgroundColor: AppTheme.bgDark,
+        backgroundColor: context.colors.bgDark,
         appBar: AppBar(
           title: Text('${card.cardType == 'visa' ? tr('visa') : card.cardType == 'master' ? tr('mastercard') : tr('digital')} ${tr('card')}'),
           actions: [
@@ -575,10 +583,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         ),
         body: RefreshIndicator(
           onRefresh: _loadDetail,
-          color: AppTheme.primary,
-          backgroundColor: AppTheme.bgCard,
+          color: context.colors.primary,
+          backgroundColor: context.colors.bgCard,
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+              ? Center(child: CircularProgressIndicator(color: context.colors.primary))
               : SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(20),
@@ -658,7 +666,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.bgCard,
+        color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(16),
       ),
       child: ListView.separated(
@@ -666,7 +674,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _transactions.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 1, indent: 74, color: AppTheme.divider),
+            Divider(height: 1, indent: 74, color: context.colors.divider),
         itemBuilder: (_, i) {
           final t = _txMap(_transactions[i]);
           final type = (t['type'] ?? t['card_transaction_type'] ?? '')
@@ -760,8 +768,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
             title: Text(
               narrative,
-              style: const TextStyle(
-                  color: AppTheme.textPrimary,
+              style: TextStyle(
+                  color: context.colors.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600),
               maxLines: 1,
@@ -777,7 +785,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               ].join(' • '),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11.5),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 11.5),
             ),
             trailing: Text(
               signedAmount,
@@ -901,7 +909,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _deposits.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 1, indent: 72, color: AppTheme.divider),
+            Divider(height: 1, indent: 72, color: context.colors.divider),
         itemBuilder: (_, i) {
           final deposit = _txMap(_deposits[i]);
           final hash = (deposit['transactionHash'] ?? '').toString();
@@ -921,7 +929,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             title: Text(
               context.tr('deposit'),
               style: TextStyle(
-                color: AppTheme.textPrimary,
+                color: context.colors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -932,7 +940,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   _formatTxDate((deposit['createdAt'] ?? '').toString()),
                 if (hash.isNotEmpty) _truncateMiddle(hash),
               ].join(' • '),
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11.5),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 11.5),
             ),
             trailing: Text(
               '+USDC ${amount.toStringAsFixed(2)}',
@@ -963,7 +971,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _points.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 1, indent: 72, color: AppTheme.divider),
+            Divider(height: 1, indent: 72, color: context.colors.divider),
         itemBuilder: (_, i) {
           final point = _txMap(_points[i]);
           final type = (point['type'] ?? '').toString();
@@ -989,8 +997,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
             title: Text(
               (point['details'] ?? context.tr('points_activity')).toString(),
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
+              style: TextStyle(
+                color: context.colors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -1001,7 +1009,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   _formatTxDate((point['created_at'] ?? '').toString()),
                 if (balance.isNotEmpty) '${context.tr('balance')} $balance',
               ].join(' • '),
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11.5),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 11.5),
             ),
             trailing: Text(
               '${isDebit ? '-' : '+'}$points',
@@ -1032,7 +1040,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _addons.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 1, indent: 72, color: AppTheme.divider),
+            Divider(height: 1, indent: 72, color: context.colors.divider),
         itemBuilder: (_, i) {
           final addon = _addons[i];
           return ListTile(
@@ -1041,15 +1049,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.12),
+                color: context.colors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.credit_card, color: AppTheme.primary, size: 18),
+              child: Icon(Icons.credit_card, color: context.colors.primary, size: 18),
             ),
             title: Text(
               addon.cardHolder?.isNotEmpty == true ? addon.cardHolder! : addon.cardId,
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
+              style: TextStyle(
+                color: context.colors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -1058,18 +1066,18 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               addon.lastFour?.isNotEmpty == true
                   ? '**** ${addon.lastFour}'
                   : addon.maskedNumber,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11.5),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 11.5),
             ),
             trailing: _openingAddonCardId == addon.cardId
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppTheme.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   )
-                : const Icon(Icons.chevron_right_rounded, color: AppTheme.textSecondary),
+                : Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary),
             onTap: _openingAddonCardId != null ? null : () => _openAddonCard(addon),
           );
         },
@@ -1080,7 +1088,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   Widget _sectionContainer(Widget child) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.bgCard,
+        color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(16),
       ),
       child: child,
@@ -1201,7 +1209,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.divider,
+                    color: context.colors.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1210,7 +1218,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               Text(
                 context.tr('approval_3ds_required'),
                 style: TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1220,17 +1228,17 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceLight,
+                  color: context.colors.surfaceLight,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.divider),
+                  border: Border.all(color: context.colors.divider),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       merchantName,
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1238,8 +1246,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     const SizedBox(height: 6),
                     Text(
                       '$merchantCurrency $merchantAmount',
-                      style: const TextStyle(
-                        color: AppTheme.primary,
+                      style: TextStyle(
+                        color: context.colors.primary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1248,8 +1256,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       const SizedBox(height: 6),
                       Text(
                         '${context.tr('card')}: $maskedPan',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                        style: TextStyle(
+                          color: context.colors.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -1306,7 +1314,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   void _showCardMenu() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: context.colors.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -1317,13 +1325,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             const SizedBox(height: 8),
             Container(width: 40, height: 4,
                 decoration: BoxDecoration(
-                    color: AppTheme.divider,
+                    color: context.colors.divider,
                     borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.copy, color: AppTheme.primary),
+              leading: Icon(Icons.copy, color: context.colors.primary),
               title: Text(context.tr('copy_card_number'),
-                  style: const TextStyle(color: AppTheme.textPrimary)),
+                  style: TextStyle(color: context.colors.textPrimary)),
               onTap: () {
                 final card = _detail ?? widget.card;
                 final text = card.cardNumber?.trim() ?? '';
@@ -1338,9 +1346,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
             if (widget.card.cardType == 'digital')
               ListTile(
-                leading: const Icon(Icons.qr_code, color: AppTheme.primary),
+                leading: Icon(Icons.qr_code, color: context.colors.primary),
                 title: Text(context.tr('wallet_otp'),
-                    style: const TextStyle(color: AppTheme.textPrimary)),
+                    style: TextStyle(color: context.colors.textPrimary)),
                 onTap: () async {
                   Navigator.pop(context);
                   final data = await CardService.getWalletOtp(widget.card.cardId);
@@ -1370,16 +1378,17 @@ class _DepositAddressTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.surfaceLight, AppTheme.bgCard.withValues(alpha: 0.98)],
+          colors: [colors.surfaceLight, colors.bgCard.withValues(alpha: 0.98)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.divider),
+        border: Border.all(color: colors.divider),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -1428,7 +1437,7 @@ class _DepositAddressTile extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary,
+                            color: colors.primary,
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: const Icon(Icons.open_in_full_rounded, color: Colors.white, size: 12),
@@ -1448,19 +1457,19 @@ class _DepositAddressTile extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: 0.14),
+                            color: colors.primary.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             item.asset,
-                            style: const TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w700),
+                            style: TextStyle(color: colors.primary, fontSize: 11, fontWeight: FontWeight.w700),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             item.network,
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
+                            style: TextStyle(color: colors.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -1470,7 +1479,7 @@ class _DepositAddressTile extends StatelessWidget {
                     Text(
                       context.tr('wallet_address'),
                       style: TextStyle(
-                        color: AppTheme.textSecondary.withValues(alpha: 0.9),
+                        color: colors.textSecondary.withValues(alpha: 0.9),
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.3,
@@ -1481,13 +1490,13 @@ class _DepositAddressTile extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppTheme.bgDark.withValues(alpha: 0.32),
+                        color: colors.bgDark.withValues(alpha: 0.32),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.divider.withValues(alpha: 0.7)),
+                        border: Border.all(color: colors.divider.withValues(alpha: 0.7)),
                       ),
                       child: SelectableText(
                         item.address,
-                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12.5, height: 1.4),
+                        style: TextStyle(color: colors.textPrimary, fontSize: 12.5, height: 1.4),
                       ),
                     ),
                   ],
@@ -1504,8 +1513,8 @@ class _DepositAddressTile extends StatelessWidget {
                   icon: const Icon(Icons.qr_code_2_rounded, size: 16),
                   label: Text(context.tr('enlarge_qr')),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.textPrimary,
-                    side: BorderSide(color: AppTheme.divider.withValues(alpha: 0.7)),
+                    foregroundColor: colors.textPrimary,
+                    side: BorderSide(color: colors.divider.withValues(alpha: 0.7)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -1518,7 +1527,7 @@ class _DepositAddressTile extends StatelessWidget {
                   icon: const Icon(Icons.copy_rounded, size: 16),
                   label: Text(context.tr('copy_address')),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
+                    backgroundColor: colors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1546,6 +1555,7 @@ class _DigitalTabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
@@ -1553,16 +1563,16 @@ class _DigitalTabChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.primary : AppTheme.bgCard,
+          color: selected ? colors.primary : colors.bgCard,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? AppTheme.primary : AppTheme.divider,
+            color: selected ? colors.primary : colors.divider,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppTheme.textSecondary,
+            color: selected ? Colors.white : colors.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
@@ -1658,7 +1668,7 @@ class _FlippableDetailCardState extends State<_FlippableDetailCard> {
         const SizedBox(height: 8),
         Text(
           context.tr('tap_card_to_flip'),
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
         ),
       ],
     );
@@ -1746,4 +1756,6 @@ class _CardBack extends StatelessWidget {
     ).animate().fadeIn(duration: 220.ms);
   }
 }
+
+
 

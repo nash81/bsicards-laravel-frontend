@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../config/app_theme.dart';
+import '../../config/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/virtual_card.dart';
 import '../../services/card_service.dart';
@@ -80,14 +80,14 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
         _visaPending.isEmpty;
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: context.colors.bgDark,
       appBar: AppBar(
         title: Text(tr('my_cards')),
         bottom: TabBar(
           controller: _tab,
-          indicatorColor: AppTheme.primary,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
+          indicatorColor: context.colors.primary,
+          labelColor: context.colors.primary,
+          unselectedLabelColor: context.colors.textSecondary,
           indicatorWeight: 3,
           tabs: [
             Tab(text: tr('digital')),
@@ -128,4 +128,3 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
     );
   }
 }
-

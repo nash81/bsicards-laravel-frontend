@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import '../../config/app_colors.dart';
 import '../../config/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/transaction.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/transaction_item.dart';
 import '../cards/cards_home_screen.dart';
@@ -50,16 +52,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<String?> _askCurrentPassword() async {
     final tr = context.tr;
+    final colors = context.colors;
     var password = '';
     final result = await showDialog<String>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: AppTheme.bgCard,
-        title: Text(tr('enable_biometric_login'), style: const TextStyle(color: AppTheme.textPrimary)),
+        backgroundColor: colors.bgCard,
+        title: Text(tr('enable_biometric_login'), style: TextStyle(color: colors.textPrimary)),
         content: TextField(
           obscureText: true,
           onChanged: (value) => password = value,
-          style: const TextStyle(color: AppTheme.textPrimary),
+          style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
             labelText: tr('current_password'),
             hintText: tr('enter_your_password'),
@@ -106,7 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           setState(() => _biometricEnabled = true);
           refreshSheet();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.tr('biometric_login_enabled')), backgroundColor: AppTheme.success),
+            SnackBar(content: Text(context.tr('biometric_login_enabled')), backgroundColor: AppSemanticColors.success),
           );
         }
       } else {
@@ -115,14 +118,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           setState(() => _biometricEnabled = false);
           refreshSheet();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.tr('biometric_login_disabled')), backgroundColor: AppTheme.success),
+            SnackBar(content: Text(context.tr('biometric_login_disabled')), backgroundColor: AppSemanticColors.success),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(e.toString()), backgroundColor: AppSemanticColors.error),
         );
       }
     } finally {
@@ -136,14 +139,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _showSettingsSheet() async {
     await showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: context.colors.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetCtx) => StatefulBuilder(
         builder: (ctx, setModal) {
           final tr = context.tr;
+          final colors = context.colors;
           final localeProvider = context.read<LocaleProvider>();
+          final themeProvider = context.read<ThemeProvider>();
           final selectedLanguage = AppLocalizations.languageOptionForCode(
             localeProvider.locale.languageCode,
           );
@@ -156,7 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: AppTheme.divider, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: colors.divider, borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 14),
               Padding(
@@ -165,7 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     tr('settings'),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: colors.textPrimary),
                   ),
                 ),
               ),
@@ -175,28 +180,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onChanged: (!_biometricSupported || _biometricBusy)
                     ? null
                     : (v) => _toggleBiometric(v, ctx, setModal),
-                title: Text(tr('biometric_login'), style: const TextStyle(color: AppTheme.textPrimary)),
+                title: Text(tr('biometric_login'), style: TextStyle(color: colors.textPrimary)),
                 subtitle: Text(
                   !_biometricSupported
                       ? tr('biometric_unavailable')
                       : tr('biometric_subtitle'),
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
-                secondary: const Icon(Icons.fingerprint, color: AppTheme.primary),
+                secondary: Icon(Icons.fingerprint, color: colors.primary),
               ),
               ListTile(
-                leading: const Icon(Icons.language_rounded, color: AppTheme.primary),
-                title: Text(tr('language'), style: const TextStyle(color: AppTheme.textPrimary)),
+                leading: Icon(Icons.language_rounded, color: colors.primary),
+                title: Text(tr('language'), style: TextStyle(color: colors.textPrimary)),
                 subtitle: Text(
                   '${selectedLanguage.flag} ${selectedLanguage.name}',
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSecondary),
+                trailing: Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
                 onTap: () => _showLanguageSelector(sheetCtx, setModal),
               ),
               ListTile(
-                leading: const Icon(Icons.logout_rounded, color: AppTheme.error),
-                title: Text(tr('logout'), style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+                leading: Icon(Icons.palette_rounded, color: colors.primary),
+                title: Text(tr('theme'), style: TextStyle(color: colors.textPrimary)),
+                subtitle: Text(
+                  themeProvider.themeLabel,
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                ),
+                trailing: Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+                onTap: () => _showThemeSelector(sheetCtx, setModal),
+              ),
+              ListTile(
+                leading: Icon(Icons.logout_rounded, color: AppSemanticColors.error),
+                title: Text(tr('logout'), style: const TextStyle(color: AppSemanticColors.error, fontWeight: FontWeight.w600)),
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   await context.read<AuthProvider>().logout();
@@ -216,10 +231,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     StateSetter setSettingsModal,
   ) async {
     final tr = context.tr;
+    final colors = context.colors;
 
     await showModalBottomSheet(
       context: sheetCtx,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: colors.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -235,7 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.divider,
+                  color: colors.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -246,8 +262,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     tr('select_language'),
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                    style: TextStyle(
+                      color: colors.textPrimary,
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                     ),
@@ -259,18 +275,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: AppLocalizations.languageOptions.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, color: AppTheme.divider),
+                  separatorBuilder: (_, __) => Divider(height: 1, color: colors.divider),
                   itemBuilder: (_, i) {
                     final option = AppLocalizations.languageOptions[i];
                     final isSelected = selectedCode == option.locale.languageCode;
                     return ListTile(
                       leading: Text(option.flag, style: const TextStyle(fontSize: 20)),
-                      title: Text(
-                        option.name,
-                        style: const TextStyle(color: AppTheme.textPrimary),
-                      ),
+                      title: Text(option.name, style: TextStyle(color: colors.textPrimary)),
                       trailing: isSelected
-                          ? const Icon(Icons.check_circle, color: AppTheme.primary)
+                          ? Icon(Icons.check_circle, color: colors.primary)
                           : null,
                       onTap: () async {
                         await context.read<LocaleProvider>().setLocale(option.locale);
@@ -284,6 +297,168 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showThemeSelector(
+    BuildContext sheetCtx,
+    StateSetter setSettingsModal,
+  ) async {
+    final tr = context.tr;
+    final colors = context.colors;
+
+    await showModalBottomSheet(
+      context: sheetCtx,
+      backgroundColor: colors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (pickerCtx) {
+        final themeProvider = context.read<ThemeProvider>();
+
+        final themes = [
+          _ThemeOption(
+            name: AppThemeName.oceanTribe,
+            label: tr('theme_ocean_tribe'),
+            description: tr('theme_ocean_tribe_desc'),
+            accent: AppColors.oceanTribe.primary,
+            bg: AppColors.oceanTribe.bgCard,
+          ),
+          _ThemeOption(
+            name: AppThemeName.blackTiger,
+            label: tr('theme_black_tiger'),
+            description: tr('theme_black_tiger_desc'),
+            accent: AppColors.blackTiger.primary,
+            bg: AppColors.blackTiger.bgCard,
+          ),
+          _ThemeOption(
+            name: AppThemeName.mysteriousElegance,
+            label: tr('theme_mysterious_elegance'),
+            description: tr('theme_mysterious_elegance_desc'),
+            accent: AppColors.mysteriousElegance.primary,
+            bg: AppColors.mysteriousElegance.bgCard,
+          ),
+        ];
+
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    tr('select_theme'),
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: themes.map((option) {
+                    final isSelected = themeProvider.themeName == option.name;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () async {
+                          await context.read<ThemeProvider>().setTheme(option.name);
+                          if (!pickerCtx.mounted) return;
+                          Navigator.pop(pickerCtx);
+                          if (!sheetCtx.mounted) return;
+                          setSettingsModal(() {});
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: option.bg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? option.accent : colors.divider,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // colour swatch preview
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [option.accent, option.accent.withValues(alpha: 0.4)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  option.name == AppThemeName.blackTiger
+                                      ? Icons.local_fire_department_rounded
+                                      : option.name == AppThemeName.mysteriousElegance
+                                          ? Icons.auto_awesome_rounded
+                                          : Icons.waves_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      option.label,
+                                      style: TextStyle(
+                                        color: colors.textPrimary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      option.description,
+                                      style: TextStyle(
+                                        color: colors.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                Icon(Icons.check_circle_rounded,
+                                    color: option.accent, size: 22),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         );
@@ -307,7 +482,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: context.colors.bgDark,
       appBar: _buildAppBar(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,8 +519,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadData,
-              color: AppTheme.primary,
-              backgroundColor: AppTheme.bgCard,
+              color: context.colors.primary,
+              backgroundColor: context.colors.bgCard,
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -360,7 +535,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: context.colors.bgCard,
       elevation: 0,
       titleSpacing: 20,
       automaticallyImplyLeading: false,
@@ -374,15 +549,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: CircleAvatar(
                 radius: 20,
-                backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+                backgroundColor: context.colors.primary.withValues(alpha: 0.2),
                 backgroundImage: auth.user?.avatar != null
                     ? NetworkImage(auth.user!.avatar!)
                     : null,
                 child: auth.user?.avatar == null
                     ? Text(
                         (auth.user?.firstName ?? 'U').substring(0, 1).toUpperCase(),
-                        style: const TextStyle(
-                            color: AppTheme.primary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: context.colors.primary, fontWeight: FontWeight.bold),
                       )
                     : null,
               ),
@@ -392,13 +567,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(context.tr('welcome_back'),
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                    style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                 Text(
                   auth.user?.firstName ?? '...',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary),
+                      color: context.colors.textPrimary),
                 ),
               ],
             ),
@@ -424,20 +599,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _balanceCard() {
+    final colors = context.colors;
     return Consumer<AuthProvider>(
       builder: (_, auth, __) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1A3A5C), Color(0xFF0D2137)],
+            colors: [
+              colors.bgCard,
+              colors.surface,
+            ],
           ),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+          border: Border.all(color: colors.primary.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primary.withValues(alpha: 0.15),
+              color: colors.primary.withValues(alpha: 0.15),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -451,15 +630,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(context.tr('total_balance'),
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white60,
+                        color: colors.textSecondary,
                         fontWeight: FontWeight.w500)),
                 GestureDetector(
                   onTap: () => setState(() => _balanceVisible = !_balanceVisible),
                   child: Icon(
                     _balanceVisible ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.white60,
+                    color: colors.textSecondary,
                     size: 16,
                   ),
                 ),
@@ -472,18 +651,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ? Text(
                       '${auth.user?.currencySymbol ?? '\$'}${(auth.user?.balance ?? 0).toStringAsFixed(2)}',
                       key: const ValueKey('visible'),
-                      style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.5),
-                    )
-                  : const Text('••••••',
-                      key: ValueKey('hidden'),
                       style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white60)),
+                          color: colors.textPrimary,
+                          letterSpacing: -0.5),
+                    )
+                  : Text('••••••',
+                      key: const ValueKey('hidden'),
+                      style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textSecondary)),
             ),
           ],
         ),
@@ -496,7 +675,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _ActionItem(
         icon: Icons.add_rounded,
         label: context.tr('add_money'),
-        color: AppTheme.primary,
+        color: context.colors.primary,
         onTap: () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const DepositScreen())),
       ),
@@ -610,28 +789,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_recent.isEmpty) {
       if (_txnError != null) {
         return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.bgCard,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.redAccent, size: 32),
-              const SizedBox(height: 8),
-              Text(
-                _txnError!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              TextButton.icon(
-                onPressed: _loadData,
-                icon: const Icon(Icons.refresh, size: 16),
-                label: Text(context.tr('retry')),
-              ),
-            ],
-          ),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.colors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.redAccent, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              _txnError!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: _loadData,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: Text(context.tr('retry')),
+            ),
+          ],
+        ),
         );
       }
       return EmptyState(
@@ -643,15 +822,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.bgCard,
+        color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(16),
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _recent.length,
-        separatorBuilder: (_, __) => const Divider(
-            height: 1, indent: 74, color: AppTheme.divider),
+        separatorBuilder: (_, __) => Divider(
+            height: 1, indent: 74, color: context.colors.divider),
         itemBuilder: (_, i) => TransactionItem(transaction: _recent[i]),
       ),
     );
@@ -665,3 +844,19 @@ class _ActionItem {
   final Future<void> Function() onTap;
   _ActionItem({required this.icon, required this.label, required this.color, required this.onTap});
 }
+
+class _ThemeOption {
+  final AppThemeName name;
+  final String label;
+  final String description;
+  final Color accent;
+  final Color bg;
+  const _ThemeOption({
+    required this.name,
+    required this.label,
+    required this.description,
+    required this.accent,
+    required this.bg,
+  });
+}
+

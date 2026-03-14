@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/app_colors.dart';
 import '../../config/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/app_notification.dart';
@@ -67,19 +68,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final tr = context.tr;
+    final colors = context.colors;
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: colors.bgDark,
       appBar: AppBar(title: Text(tr('notifications'))),
       body: RefreshIndicator(
         onRefresh: _load,
-        color: AppTheme.primary,
-        backgroundColor: AppTheme.bgCard,
+        color: colors.primary,
+        backgroundColor: colors.bgCard,
         child: _loading
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
-                children: const [Center(child: CircularProgressIndicator(color: AppTheme.primary))],
+                children: [Center(child: CircularProgressIndicator(color: colors.primary))],
               )
             : _error != null
                 ? ListView(
@@ -116,7 +118,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (_, i) {
                           final n = _items[i];
-                          final iconColor = n.isRead ? AppTheme.textSecondary : AppTheme.primary;
+                          final iconColor = n.isRead ? colors.textSecondary : colors.primary;
 
                           return InkWell(
                             borderRadius: BorderRadius.circular(14),
@@ -140,9 +142,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: AppTheme.bgCard,
+                                color: colors.bgCard,
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppTheme.divider),
+                                border: Border.all(color: colors.divider),
                               ),
                               child: Row(
                                 children: [
@@ -160,7 +162,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     child: Text(
                                       n.title,
                                       style: TextStyle(
-                                        color: AppTheme.textPrimary,
+                                        color: colors.textPrimary,
                                         fontWeight: n.isRead ? FontWeight.w500 : FontWeight.w700,
                                       ),
                                     ),
@@ -168,7 +170,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   const SizedBox(width: 8),
                                   Text(
                                     n.timeAgo.isEmpty ? n.createdAt : n.timeAgo,
-                                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                                    style: TextStyle(color: colors.textSecondary, fontSize: 11),
                                   ),
                                 ],
                               ),

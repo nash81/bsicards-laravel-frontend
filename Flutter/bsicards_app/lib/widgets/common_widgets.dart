@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../config/app_theme.dart';
+import '../config/app_colors.dart';
 
 // ── Primary Button ───────────────────────────────────────────────────────────
 class AppButton extends StatelessWidget {
@@ -25,7 +25,8 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = color ?? AppTheme.primary;
+    final colors = context.colors;
+    final bg = color ?? colors.primary;
     return SizedBox(
       width: width ?? double.infinity,
       height: 52,
@@ -111,6 +112,7 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return TextFormField(
       controller: widget.controller,
       obscureText: _obscure,
@@ -120,7 +122,7 @@ class _AppTextFieldState extends State<AppTextField> {
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       maxLines: widget.obscure ? 1 : widget.maxLines,
       readOnly: widget.readOnly,
-      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+      style: TextStyle(color: colors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
@@ -131,7 +133,7 @@ class _AppTextFieldState extends State<AppTextField> {
             ? IconButton(
                 icon: Icon(
                   _obscure ? Icons.visibility_off : Icons.visibility,
-                  color: AppTheme.textSecondary,
+                  color: colors.textSecondary,
                   size: 20,
                 ),
                 onPressed: () => setState(() => _obscure = !_obscure),
@@ -157,20 +159,21 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary)),
+                color: colors.textPrimary)),
         if (action != null)
           TextButton(
             onPressed: onAction,
             child: Text(action!,
-                style: const TextStyle(
-                    color: AppTheme.primary,
+                style: TextStyle(
+                    color: colors.primary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600)),
           ),
@@ -189,16 +192,17 @@ class ShimmerBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: AppTheme.surfaceLight,
+        color: colors.surfaceLight,
         borderRadius: BorderRadius.circular(radius),
       ),
     ).animate(onPlay: (c) => c.repeat()).shimmer(
           duration: 1200.ms,
-          color: AppTheme.bgCard.withOpacity(0.6),
+          color: colors.bgCard.withValues(alpha: 0.6),
         );
   }
 }
@@ -218,6 +222,7 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -225,22 +230,22 @@ class EmptyState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceLight,
+              color: colors.surfaceLight,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 48, color: AppTheme.textSecondary),
+            child: Icon(icon, size: 48, color: colors.textSecondary),
           ),
           const SizedBox(height: 20),
           Text(title,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary)),
+                  color: colors.textPrimary)),
           if (subtitle != null) ...[
             const SizedBox(height: 8),
             Text(subtitle!,
-                style: const TextStyle(
-                    fontSize: 14, color: AppTheme.textSecondary),
+                style: TextStyle(
+                    fontSize: 14, color: colors.textSecondary),
                 textAlign: TextAlign.center),
           ],
         ],
@@ -266,12 +271,13 @@ class InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 18, color: AppTheme.primary),
+            Icon(icon, size: 18, color: colors.primary),
             const SizedBox(width: 10),
           ],
           Expanded(
@@ -279,14 +285,14 @@ class InfoTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppTheme.textSecondary)),
+                    style: TextStyle(
+                        fontSize: 12, color: colors.textSecondary)),
                 const SizedBox(height: 2),
                 Text(value,
                     style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: valueColor ?? AppTheme.textPrimary)),
+                        color: valueColor ?? colors.textPrimary)),
               ],
             ),
           ),
@@ -295,4 +301,3 @@ class InfoTile extends StatelessWidget {
     );
   }
 }
-

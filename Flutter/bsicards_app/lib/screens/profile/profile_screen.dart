@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/app_colors.dart';
 import '../../config/app_theme.dart';
 import '../../data/countries.dart';
 import '../../l10n/app_localizations.dart';
@@ -65,13 +66,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickCountry() async {
     final tr = context.tr;
+    final colors = context.colors;
     final searchCtrl = TextEditingController();
     var filtered = List<CountryOption>.from(allCountries);
 
     final picked = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: colors.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -92,16 +94,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       tr('select_country'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: searchCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary),
+                      style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
                         hintText: tr('type_to_search'),
                         prefixIcon: const Icon(Icons.search),
@@ -124,22 +126,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ? Center(
                               child: Text(
                                 tr('no_matching_results'),
-                                style: const TextStyle(color: AppTheme.textSecondary),
+                                style: TextStyle(color: colors.textSecondary),
                               ),
                             )
                           : ListView.separated(
                               itemCount: filtered.length,
-                              separatorBuilder: (_, __) => const Divider(height: 1, color: AppTheme.divider),
+                              separatorBuilder: (_, __) => Divider(height: 1, color: colors.divider),
                               itemBuilder: (_, i) {
                                 final country = filtered[i];
                                 return ListTile(
                                   title: Text(
                                     country.name,
-                                    style: const TextStyle(color: AppTheme.textPrimary),
+                                    style: TextStyle(color: colors.textPrimary),
                                   ),
                                   subtitle: Text(
                                     country.code,
-                                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
                                   ),
                                   onTap: () => Navigator.pop(sheetCtx, country.name),
                                 );
@@ -232,13 +234,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout() async {
+    final colors = context.colors;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.bgCard,
-        title: Text(context.tr('logout'), style: const TextStyle(color: AppTheme.textPrimary)),
+        backgroundColor: colors.bgCard,
+        title: Text(context.tr('logout'), style: TextStyle(color: colors.textPrimary)),
         content: Text(context.tr('confirm_logout'),
-            style: const TextStyle(color: AppTheme.textSecondary)),
+            style: TextStyle(color: colors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -259,9 +262,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final tr = context.tr;
+    final colors = context.colors;
     final user = context.watch<AuthProvider>().user;
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: colors.bgDark,
       appBar: AppBar(
         title: Text(tr('my_profile')),
         actions: [
@@ -289,8 +293,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: 100, height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppTheme.surfaceLight,
-                          border: Border.all(color: AppTheme.primary, width: 2),
+                          color: colors.surfaceLight,
+                          border: Border.all(color: colors.primary, width: 2),
                           image: _newAvatar != null
                               ? DecorationImage(
                                   image: FileImage(_newAvatar!),
@@ -308,10 +312,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 (user?.firstName ?? 'U')
                                     .substring(0, 1)
                                     .toUpperCase(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 36,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.primary),
+                                    color: colors.primary),
                               )
                             : null,
                       ),
@@ -320,8 +324,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       bottom: 0, right: 0,
                       child: Container(
                         padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primary,
+                        decoration: BoxDecoration(
+                          color: colors.primary,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
@@ -336,20 +340,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     children: [
                       Text(user.email,
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 13)),
+                          style: TextStyle(
+                              color: colors.textSecondary, fontSize: 13)),
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.15),
+                          color: colors.primary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '${tr('account')}: ${user.accountNumber ?? tr('not_available')}',
-                          style: const TextStyle(
-                              color: AppTheme.primary,
+                          style: TextStyle(
+                              color: colors.primary,
                               fontSize: 12,
                               fontWeight: FontWeight.w600),
                         ),
@@ -365,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary))
+                      color: colors.textPrimary))
                   .animate().fadeIn(),
               const SizedBox(height: 16),
               Row(children: [
@@ -415,7 +419,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 controller: _countryCtrl,
                 readOnly: true,
                 onTap: _pickCountry,
-                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                style: TextStyle(color: colors.textPrimary, fontSize: 15),
                 decoration: InputDecoration(
                   labelText: tr('country'),
                   prefixIcon: const Icon(Icons.flag_outlined, size: 20),
@@ -445,26 +449,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _balanceRow(user) {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A3A5C), Color(0xFF0D2137)],
+        gradient: LinearGradient(
+          colors: [colors.bgCard, colors.surface],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _stat(context.tr('balance'), '${user.currencySymbol}${user.balance.toStringAsFixed(2)}',
-              AppTheme.primary),
-          Container(width: 1, height: 40, color: AppTheme.divider),
+              colors.primary),
+          Container(width: 1, height: 40, color: colors.divider),
           _stat(context.tr('deposited'), '+${user.currencySymbol}${user.totalDeposit.toStringAsFixed(0)}',
               AppTheme.income),
-          Container(width: 1, height: 40, color: AppTheme.divider),
+          Container(width: 1, height: 40, color: colors.divider),
           _stat(context.tr('withdrawn'), '-${user.currencySymbol}${user.totalWithdraw.toStringAsFixed(0)}',
               AppTheme.expense),
         ],
@@ -473,6 +478,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _stat(String label, String value, Color color) {
+    final colors = context.colors;
     return Column(
       children: [
         Text(value,
@@ -480,12 +486,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: color, fontSize: 15, fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
         Text(label,
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+            style: TextStyle(color: colors.textSecondary, fontSize: 11)),
       ],
     );
   }
 
   void _showChangePassword() {
+    final colors = context.colors;
     final currCtrl = TextEditingController();
     final newCtrl  = TextEditingController();
     final confCtrl = TextEditingController();
@@ -494,7 +501,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: colors.bgCard,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => Padding(
@@ -508,12 +515,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Center(child: Container(width: 40, height: 4,
-                  decoration: BoxDecoration(color: AppTheme.divider,
+                  decoration: BoxDecoration(color: colors.divider,
                       borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
               Text(context.tr('change_password'),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary)),
+                      color: colors.textPrimary)),
               const SizedBox(height: 20),
               AppTextField(label: context.tr('current_password'), controller: currCtrl,
                   obscure: true, validator: (v) => v!.isEmpty ? context.tr('required') : null),

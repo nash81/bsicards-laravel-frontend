@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/transaction.dart';
 import '../config/app_theme.dart';
+import '../config/app_colors.dart';
 
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
@@ -11,6 +12,7 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isCredit = transaction.isCredit;
     final amountColor = isCredit ? AppTheme.income : AppTheme.expense;
     final sign = isCredit ? '+' : '-';
@@ -40,10 +42,10 @@ class TransactionItem extends StatelessWidget {
                 children: [
                   Text(
                     _formatDescription(transaction.description),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
+                      color: colors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -54,18 +56,18 @@ class TransactionItem extends StatelessWidget {
                       Flexible(
                         child: Text(
                           transaction.method,
-                          style: const TextStyle(
-                              fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                              fontSize: 12, color: colors.textSecondary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Text(' · ',
-                          style: TextStyle(color: AppTheme.textSecondary)),
+                      Text(' · ',
+                          style: TextStyle(color: colors.textSecondary)),
                       Text(
                         _formatDate(transaction.createdAt),
-                        style: const TextStyle(
-                            fontSize: 12, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 12, color: colors.textSecondary),
                       ),
                     ],
                   ),

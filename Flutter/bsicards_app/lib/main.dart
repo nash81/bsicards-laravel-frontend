@@ -6,11 +6,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
+import 'config/app_colors.dart';
 import 'config/app_config.dart';
-import 'config/app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'providers/locale_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/root_shell.dart';
 import 'services/app_snackbar.dart';
@@ -21,22 +22,28 @@ Future<void> main() async {
   final localeProvider = LocaleProvider();
   await localeProvider.load();
 
+  final themeProvider = ThemeProvider();
+  await themeProvider.load();
+
   if (!kIsWeb && Platform.isAndroid) {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
-  // Allow self-signed certificates for localhost/LAN API hosts in non-release builds.
-  if (!kReleaseMode) {
-    HttpOverrides.global = _DevHttpOverrides();
-  }
+  // Allow self-signed certificates for localhost/LAN API hosts.
+  HttpOverrides.global = _DevHttpOverrides();
 
-  runApp(BsiCardsApp(localeProvider: localeProvider));
+  runApp(BsiCardsApp(localeProvider: localeProvider, themeProvider: themeProvider));
 }
 
 class BsiCardsApp extends StatelessWidget {
   final LocaleProvider localeProvider;
+  final ThemeProvider themeProvider;
 
-  const BsiCardsApp({super.key, required this.localeProvider});
+  const BsiCardsApp({
+    super.key,
+    required this.localeProvider,
+    required this.themeProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +51,14 @@ class BsiCardsApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
       ],
-      child: Consumer<LocaleProvider>(
-        builder: (_, localeState, __) => MaterialApp(
+      child: Consumer2<LocaleProvider, ThemeProvider>(
+        builder: (_, localeState, themeState, __) => MaterialApp(
           onGenerateTitle: (context) => context.tr('app_name'),
           debugShowCheckedModeBanner: false,
           scaffoldMessengerKey: AppSnackbar.messengerKey,
-          theme: AppTheme.darkTheme,
+          theme: themeState.themeData,
           locale: localeState.locale,
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: const [
@@ -116,8 +124,9 @@ class _SplashView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: colors.bgDark,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -126,8 +135,8 @@ class _SplashView extends StatelessWidget {
               width: 86,
               height: 86,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.primary, AppTheme.primaryDark],
+                gradient: LinearGradient(
+                  colors: [colors.primary, colors.primaryDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -138,21 +147,21 @@ class _SplashView extends StatelessWidget {
                 .animate(onPlay: (c) => c.repeat(reverse: true))
                 .scale(begin: const Offset(1, 1), end: const Offset(1.06, 1.06), duration: 900.ms),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'BSI Cards',
               style: TextStyle(
-                color: AppTheme.textPrimary,
+                color: colors.textPrimary,
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Modern Banking, Simplified',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: colors.textSecondary),
             ),
             const SizedBox(height: 20),
-            const CircularProgressIndicator(color: AppTheme.primary),
+            CircularProgressIndicator(color: colors.primary),
           ],
         ),
       ),

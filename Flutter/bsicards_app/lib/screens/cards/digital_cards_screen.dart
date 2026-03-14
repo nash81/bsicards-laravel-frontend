@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
+import '../../config/app_colors.dart';
 import '../../config/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/virtual_card.dart';
@@ -12,7 +13,7 @@ import '../../widgets/card_widget.dart';
 import '../../widgets/common_widgets.dart';
 import 'card_detail_screen.dart';
 
-// ── Shared card list layout used by all three card screens ────────────────────
+// ΓöÇΓöÇ Shared card list layout used by all three card screens ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 class _CardListLayout extends StatelessWidget {
   final List<VirtualCard> cards;
   final bool loading;
@@ -35,8 +36,8 @@ class _CardListLayout extends StatelessWidget {
     final tr = context.tr;
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: AppTheme.primary,
-      backgroundColor: AppTheme.bgCard,
+      color: context.colors.primary,
+      backgroundColor: context.colors.bgCard,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -61,21 +62,21 @@ class _CardListLayout extends StatelessWidget {
             CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                // ── "Issued Cards" heading ─────────────────────────────
+                // ΓöÇΓöÇ "Issued Cards" heading ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
                   sliver: SliverToBoxAdapter(
                     child: Text(
                       tr('issued_cards'),
                       style: TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
-                // ── Cards list or empty state ──────────────────────────
+                // ΓöÇΓöÇ Cards list or empty state ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   sliver: cards.isEmpty
@@ -119,7 +120,7 @@ class _CardListLayout extends StatelessWidget {
   }
 }
 
-// ── Digital Cards ─────────────────────────────────────────────────────────────
+// ΓöÇΓöÇ Digital Cards ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 class DigitalCardsScreen extends StatelessWidget {
   final List<VirtualCard> cards;
   final bool loading;
@@ -143,9 +144,9 @@ class DigitalCardsScreen extends StatelessWidget {
       emptySubtitle: tr('digital_cards_empty_subtitle'),
       fab: FloatingActionButton.extended(
         onPressed: () => _showDigitalApplySheet(context, onRefresh),
-        backgroundColor: AppTheme.primary,
+        backgroundColor: context.colors.primary,
         icon: const Icon(Icons.add),
-        label: Text(tr('apply_now')),
+        label: Text(tr('apply')),
       ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
     );
   }
@@ -179,7 +180,7 @@ Future<void> _showDigitalApplySheet(
 
   await showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.bgCard,
+    backgroundColor: context.colors.bgCard,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -311,12 +312,12 @@ Future<void> _showDigitalApplySheet(
                 children: [
                   Text(
                     tr('apply_for_digital_mastercard'),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${tr('new_card_fee_of')} \$${(digifee ?? 0).toStringAsFixed(2)} ${tr('will_be_charged')}',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
@@ -336,7 +337,7 @@ Future<void> _showDigitalApplySheet(
                     readOnly: true,
                     onTap: loading ? null : pickDob,
                     validator: (v) => (v ?? '').trim().isEmpty ? tr('dob_required') : null,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
                     decoration: InputDecoration(
                       labelText: tr('date_of_birth'),
                       hintText: tr('date_format_yyyy_mm_dd'),
@@ -382,7 +383,7 @@ Future<void> _showDigitalApplySheet(
                         child: Text(
                           _countryLabel(country) ?? tr('select_country'),
                           style: TextStyle(
-                            color: country == null ? AppTheme.textSecondary : AppTheme.textPrimary,
+                            color: country == null ? context.colors.textSecondary : context.colors.textPrimary,
                             fontSize: 15,
                           ),
                         ),
@@ -404,7 +405,7 @@ Future<void> _showDigitalApplySheet(
                         child: Text(
                           _countryCodeLabel(countryCode) ?? tr('select_country_code'),
                           style: TextStyle(
-                            color: countryCode == null ? AppTheme.textSecondary : AppTheme.textPrimary,
+                            color: countryCode == null ? context.colors.textSecondary : context.colors.textPrimary,
                             fontSize: 15,
                           ),
                         ),
@@ -486,12 +487,13 @@ Future<String?> _showSearchSelectDialog(
   final picked = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppTheme.bgCard,
+    backgroundColor: context.colors.bgCard,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (sheetCtx) => StatefulBuilder(
       builder: (ctx, setModal) {
+        final colors = context.colors;
         final maxSheetHeight = MediaQuery.of(sheetCtx).size.height * 0.78;
         return SafeArea(
           child: Padding(
@@ -507,16 +509,16 @@ Future<String?> _showSearchSelectDialog(
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: searchCtrl,
-                    style: const TextStyle(color: AppTheme.textPrimary),
+                    style: TextStyle(color: colors.textPrimary),
                     decoration: InputDecoration(
                       hintText: tr('type_to_search'),
                       prefixIcon: const Icon(Icons.search),
@@ -537,16 +539,16 @@ Future<String?> _showSearchSelectDialog(
                         ? Center(
                             child: Text(
                               tr('no_matching_results'),
-                              style: const TextStyle(color: AppTheme.textSecondary),
+                              style: TextStyle(color: colors.textSecondary),
                             ),
                           )
                         : ListView.separated(
                             itemCount: filtered.length,
-                            separatorBuilder: (_, __) => const Divider(height: 1, color: AppTheme.divider),
+                            separatorBuilder: (_, __) => Divider(height: 1, color: colors.divider),
                             itemBuilder: (_, i) => ListTile(
                               title: Text(
                                 filtered[i].label,
-                                style: const TextStyle(color: AppTheme.textPrimary),
+                                style: TextStyle(color: colors.textPrimary),
                               ),
                               onTap: () => Navigator.pop(sheetCtx, filtered[i].value),
                             ),
@@ -715,7 +717,7 @@ const List<_PhoneCodeOption> _countryPhoneCodes = [
   _PhoneCodeOption('965', 'Kuwait'),
 ];
 
-// ── MasterCards ───────────────────────────────────────────────────────────────
+// ΓöÇΓöÇ MasterCards ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 class MasterCardsScreen extends StatelessWidget {
   final List<VirtualCard> cards;
   final List<Map<String, dynamic>> pending;
@@ -742,7 +744,7 @@ class MasterCardsScreen extends StatelessWidget {
       emptySubtitle: tr('mastercards_empty_subtitle'),
       fab: FloatingActionButton.extended(
         onPressed: () => _showMasterApplySheet(context, onRefresh),
-        backgroundColor: AppTheme.primary,
+        backgroundColor: context.colors.primary,
         icon: const Icon(Icons.add),
         label: Text(tr('apply')),
       ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
@@ -750,7 +752,7 @@ class MasterCardsScreen extends StatelessWidget {
   }
 }
 
-// ── Visa Cards ────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇ Visa Cards ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 class VisaCardsScreen extends StatelessWidget {
   final List<VirtualCard> cards;
   final List<Map<String, dynamic>> pending;
@@ -777,7 +779,7 @@ class VisaCardsScreen extends StatelessWidget {
       emptySubtitle: tr('visa_cards_empty_subtitle'),
       fab: FloatingActionButton.extended(
         onPressed: () => _showVisaApplySheet(context, onRefresh),
-        backgroundColor: AppTheme.primary,
+        backgroundColor: context.colors.primary,
         icon: const Icon(Icons.add),
         label: Text(tr('apply')),
       ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
@@ -822,7 +824,7 @@ class _CardsWithPendingTabs extends StatelessWidget {
     final tr = context.tr;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.bgCard,
+      backgroundColor: context.colors.bgCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -839,7 +841,7 @@ class _CardsWithPendingTabs extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.divider,
+                color: context.colors.divider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -851,7 +853,7 @@ class _CardsWithPendingTabs extends StatelessWidget {
                   Text(
                     tr('pending_applications'),
                     style: TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
@@ -876,7 +878,7 @@ class _CardsWithPendingTabs extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Divider(height: 1, color: AppTheme.divider),
+            Divider(height: 1, color: context.colors.divider),
             Expanded(
               child: pending.isEmpty
                   ? Center(
@@ -902,7 +904,7 @@ class _CardsWithPendingTabs extends StatelessWidget {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
-                            color: AppTheme.surfaceLight,
+                            color: context.colors.surfaceLight,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                           ),
@@ -930,8 +932,8 @@ class _CardsWithPendingTabs extends StatelessWidget {
                                   children: [
                                     Text(
                                       name,
-                                      style: const TextStyle(
-                                        color: AppTheme.textPrimary,
+                                      style: TextStyle(
+                                        color: context.colors.textPrimary,
                                         fontWeight: FontWeight.w600,
                                         fontSize: 13,
                                       ),
@@ -941,8 +943,8 @@ class _CardsWithPendingTabs extends StatelessWidget {
                                         padding: const EdgeInsets.only(top: 2),
                                         child: Text(
                                           email,
-                                          style: const TextStyle(
-                                              color: AppTheme.textSecondary, fontSize: 11.5),
+                                          style: TextStyle(
+                                              color: context.colors.textSecondary, fontSize: 11.5),
                                         ),
                                       ),
                                   ],
@@ -980,8 +982,8 @@ class _CardsWithPendingTabs extends StatelessWidget {
     final tr = context.tr;
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: AppTheme.primary,
-      backgroundColor: AppTheme.bgCard,
+      color: context.colors.primary,
+      backgroundColor: context.colors.bgCard,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -1000,7 +1002,7 @@ class _CardsWithPendingTabs extends StatelessWidget {
             CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                // ── Header: Issued Cards + Pending button ──────────────
+                // ΓöÇΓöÇ Header: Issued Cards + Pending button ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                   sliver: SliverToBoxAdapter(
@@ -1068,7 +1070,7 @@ class _CardsWithPendingTabs extends StatelessWidget {
                     ),
                   ),
                 ),
-                // ── Cards list ─────────────────────────────────────────
+                // ΓöÇΓöÇ Cards list ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   sliver: cards.isEmpty
@@ -1132,7 +1134,7 @@ Future<void> _showMasterApplySheet(
 
   await showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.bgCard,
+    backgroundColor: context.colors.bgCard,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -1177,12 +1179,12 @@ Future<void> _showMasterApplySheet(
               children: [
                 Text(
                   tr('apply_for_mastercard'),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '${tr('new_card_fee_of')} \$${(issueFee ?? 0).toStringAsFixed(2)} ${tr('plus_minimum_load_10')}',
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
@@ -1236,7 +1238,7 @@ Future<void> _showVisaApplySheet(
 
   await showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.bgCard,
+    backgroundColor: context.colors.bgCard,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -1328,12 +1330,12 @@ Future<void> _showVisaApplySheet(
                 children: [
                   Text(
                     tr('apply_for_visa_card'),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${tr('new_card_fee_of')} \$${(issueFee ?? 0).toStringAsFixed(2)} ${tr('plus_minimum_load_10')}',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
@@ -1354,7 +1356,7 @@ Future<void> _showVisaApplySheet(
                     readOnly: true,
                     onTap: loading ? null : pickDob,
                     validator: (v) => (v ?? '').trim().isEmpty ? tr('dob_required') : null,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
                     decoration: InputDecoration(
                       labelText: tr('date_of_birth'),
                       hintText: tr('date_format_yyyy_mm_dd'),
@@ -1378,7 +1380,7 @@ Future<void> _showVisaApplySheet(
                     const SizedBox(height: 6),
                     Text(
                       userPhotoFile!.path.split('\\').last,
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                     ),
                   ],
                   const SizedBox(height: 12),
@@ -1392,7 +1394,7 @@ Future<void> _showVisaApplySheet(
                     const SizedBox(height: 6),
                     Text(
                       nationalIdImageFile!.path.split('\\').last,
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                     ),
                   ],
                   if (userPhotoFile == null || nationalIdImageFile == null) ...[

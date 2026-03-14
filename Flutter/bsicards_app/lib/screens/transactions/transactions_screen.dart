@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../config/app_colors.dart';
 import '../../config/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/transaction.dart';
@@ -94,6 +95,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final tr = context.tr;
+    final colors = context.colors;
     final types = [
       {'label': tr('all'), 'value': null},
       {'label': tr('deposits'), 'value': 'deposit'},
@@ -103,7 +105,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: colors.bgDark,
       appBar: AppBar(title: Text(tr('transactions'))),
       body: Column(
         children: [
@@ -136,14 +138,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     setState(() => _typeFilter = selectedValue);
                     _loadTransactions();
                   },
-                  selectedColor: AppTheme.primary.withOpacity(0.2),
+                  selectedColor: colors.primary.withValues(alpha: 0.2),
                   side: BorderSide(
-                    color: isSelected ? AppTheme.primary : AppTheme.divider,
+                    color: isSelected ? colors.primary : colors.divider,
                   ),
                   labelStyle: TextStyle(
-                    color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? colors.primary : colors.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     fontSize: 13,
                   ),
                 );
@@ -154,8 +155,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () => _loadTransactions(),
-              color: AppTheme.primary,
-              backgroundColor: AppTheme.bgCard,
+              color: colors.primary,
+              backgroundColor: colors.bgCard,
               child: _buildListState(),
             ),
           ),
@@ -216,10 +217,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       itemCount: _items.length + (_loadingMore ? 1 : 0),
       itemBuilder: (ctx, i) {
         if (i == _items.length) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2),
+              padding: const EdgeInsets.all(16),
+              child: CircularProgressIndicator(color: context.colors.primary, strokeWidth: 2),
             ),
           );
         }
@@ -232,17 +233,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                 child: Text(
                   _dayLabel(_items[i].createdAt),
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: context.colors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
             Container(
-              color: AppTheme.bgCard,
+              color: context.colors.bgCard,
               child: TransactionItem(
                 transaction: _items[i],
               ),
             ),
             if (i < _items.length - 1 && _dayLabel(_items[i].createdAt) == _dayLabel(_items[i + 1].createdAt))
-              const Divider(height: 1, indent: 74, color: AppTheme.divider),
+              Divider(height: 1, indent: 74, color: context.colors.divider),
           ],
         );
       },
