@@ -1555,6 +1555,21 @@ input[type="radio"]:not(.toggle-switch input):checked::after {
     .header .logo {
         display: block;
     }
+
+    .header .logo a {
+        display: flex;
+        align-items: center;
+    }
+
+    .header .logo .logo-unfold {
+        display: none !important;
+    }
+
+    .header .logo .logo-fold {
+        display: block;
+        width: auto;
+        max-height: 30px;
+    }
 }
 
 @media (max-width: 768px) {

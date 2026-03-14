@@ -1,7 +1,7 @@
 class AppConfig {
   // ── Change this to your server URL ──────────────────────────────────
 
-  static const String baseUrl = 'http://172.16.101.111/api/v1';
+  static const String baseUrl = 'https://bank.bsigroup.tech/api/v1';
 
   /// Replaces `localhost` / `127.0.0.1` in a URL returned by the server
   /// with the actual host from [baseUrl] so that avatars and other assets
