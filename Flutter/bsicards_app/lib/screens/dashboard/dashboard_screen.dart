@@ -14,6 +14,7 @@ import '../cards/cards_home_screen.dart';
 import '../deposit/deposit_screen.dart';
 import '../profile/profile_screen.dart';
 import '../transactions/transactions_screen.dart';
+import '../withdraw/withdraw_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -678,6 +679,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: context.colors.primary,
         onTap: () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const DepositScreen())),
+      ),
+      _ActionItem(
+        icon: Icons.call_made_rounded,
+        label: context.tr('withdraw'),
+        color: const Color(0xFFFF7043),
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const WithdrawScreen())),
       ),
       _ActionItem(
         icon: Icons.credit_card_rounded,

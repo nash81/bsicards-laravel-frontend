@@ -222,6 +222,70 @@ class ApiService {
     }
   }
 
+  // ── PUT ─────────────────────────────────────────────────────────────
+  static Future<Map<String, dynamic>> put(
+    String path, {
+    Map<String, dynamic>? body,
+    bool auth = true,
+  }) async {
+    final uri = _uri(path);
+    final watch = Stopwatch()..start();
+    try {
+      final headers = await _headers(auth: auth);
+      final payload = body ?? <String, dynamic>{};
+      _logRequest('PUT', uri, headers: headers, body: payload);
+      final response = await http
+          .put(
+            uri,
+            headers: headers,
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 30));
+      _logResponse('PUT', uri, response, watch);
+      return _parse(response);
+    } on SocketException catch (e) {
+      _logFailure('PUT', uri, e, watch);
+      throw ApiException('No internet connection.');
+    } catch (e) {
+      _logFailure('PUT', uri, e, watch);
+      throw ApiException(e.toString());
+    } finally {
+      watch.stop();
+    }
+  }
+
+  // ── DELETE ──────────────────────────────────────────────────────────
+  static Future<Map<String, dynamic>> delete(
+    String path, {
+    Map<String, dynamic>? body,
+    bool auth = true,
+  }) async {
+    final uri = _uri(path);
+    final watch = Stopwatch()..start();
+    try {
+      final headers = await _headers(auth: auth);
+      final payload = body ?? <String, dynamic>{};
+      _logRequest('DELETE', uri, headers: headers, body: payload);
+      final response = await http
+          .delete(
+            uri,
+            headers: headers,
+            body: payload.isEmpty ? null : jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 30));
+      _logResponse('DELETE', uri, response, watch);
+      return _parse(response);
+    } on SocketException catch (e) {
+      _logFailure('DELETE', uri, e, watch);
+      throw ApiException('No internet connection.');
+    } catch (e) {
+      _logFailure('DELETE', uri, e, watch);
+      throw ApiException(e.toString());
+    } finally {
+      watch.stop();
+    }
+  }
+
   // ── Response parser ──────────────────────────────────────────────────
   static Map<String, dynamic> _parse(http.Response response) {
     try {

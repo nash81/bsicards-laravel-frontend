@@ -43,6 +43,50 @@ class VirtualCard {
     this.addon,
   });
 
+  VirtualCard copyWith({
+    String? cardId,
+    String? userEmail,
+    String? lastFour,
+    String? cardNumber,
+    String? cardHolder,
+    String? expiryDate,
+    String? cvv,
+    String? status,
+    String? cardType,
+    String? providerType,
+    double? balance,
+    String? billingAddress1,
+    String? billingCity,
+    String? billingState,
+    String? billingCountry,
+    String? billingZipCode,
+    List<CardDepositAddress>? depositAddresses,
+    bool? isAddon,
+    List<dynamic>? addon,
+  }) {
+    return VirtualCard(
+      cardId: cardId ?? this.cardId,
+      userEmail: userEmail ?? this.userEmail,
+      lastFour: lastFour ?? this.lastFour,
+      cardNumber: cardNumber ?? this.cardNumber,
+      cardHolder: cardHolder ?? this.cardHolder,
+      expiryDate: expiryDate ?? this.expiryDate,
+      cvv: cvv ?? this.cvv,
+      status: status ?? this.status,
+      cardType: cardType ?? this.cardType,
+      providerType: providerType ?? this.providerType,
+      balance: balance ?? this.balance,
+      billingAddress1: billingAddress1 ?? this.billingAddress1,
+      billingCity: billingCity ?? this.billingCity,
+      billingState: billingState ?? this.billingState,
+      billingCountry: billingCountry ?? this.billingCountry,
+      billingZipCode: billingZipCode ?? this.billingZipCode,
+      depositAddresses: depositAddresses ?? this.depositAddresses,
+      isAddon: isAddon ?? this.isAddon,
+      addon: addon ?? this.addon,
+    );
+  }
+
   factory VirtualCard.fromJson(Map<String, dynamic> json, {String type = 'digital'}) {
     final billing = json['billing_address'] is Map<String, dynamic>
         ? json['billing_address'] as Map<String, dynamic>
@@ -59,10 +103,10 @@ class VirtualCard {
       userEmail: _asString(json['useremail']) ?? _asString(json['userEmail']) ?? _asString(json['user_email']) ?? '',
       lastFour: _asString(json['lastfour']) ?? _asString(json['lastFour']) ?? _asString(json['last_four']),
       cardNumber: cardNumber,
-      cardHolder: _asString(json['cardholder']) ??
-          _asString(json['cardHolder']) ??
-          _asString(json['nameoncard']) ??
-          _asString(json['name_on_card']),
+      cardHolder: _asString(json['nameoncard']) ??
+          _asString(json['name_on_card']) ??
+          _asString(json['cardholder']) ??
+          _asString(json['cardHolder']),
       expiryDate: _asString(json['expirydate']) ??
           _asString(json['expiryDate']) ??
           _asString(json['expiry']) ??

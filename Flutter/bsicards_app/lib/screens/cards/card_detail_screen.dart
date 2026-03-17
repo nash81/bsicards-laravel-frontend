@@ -68,8 +68,21 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           data = await CardService.getDigitalCardDetail(widget.card.cardId);
       }
       if (mounted) {
+        final fetchedCard = data['card'] as VirtualCard?;
+        final holderFallback = (fetchedCard?.cardHolder?.trim().isNotEmpty ?? false)
+            ? fetchedCard!.cardHolder
+            : widget.card.cardHolder;
+        final detailCard = (fetchedCard ?? widget.card).copyWith(
+          cardHolder: holderFallback,
+          cardNumber: (fetchedCard?.cardNumber?.trim().isNotEmpty ?? false)
+              ? fetchedCard!.cardNumber
+              : widget.card.cardNumber,
+          lastFour: (fetchedCard?.lastFour?.trim().isNotEmpty ?? false)
+              ? fetchedCard!.lastFour
+              : widget.card.lastFour,
+        );
         setState(() {
-          _detail = data['card'] as VirtualCard? ?? widget.card;
+          _detail = detailCard;
           _transactions = data['transactions'] as List? ?? [];
           _deposits = data['deposits'] as List? ?? [];
           _points = data['points'] as List? ?? [];
