@@ -221,6 +221,213 @@ $response = $client->visaGetCard(
 
 ---
 
+---
+
+## Digital Visa Wallet API
+
+These endpoints manage virtual Visa cards backed by the Digital Visa Wallet infrastructure. Cards support 3DS auto-approve, Google Pay, and Apple Pay.
+
+> **Note:** The card issuance fee and a minimum funding of **$5** are deducted from your Digital Visa issuing and Digital fund balances respectively upon card creation.
+
+---
+
+### Create Virtual Visa Wallet Card
+
+```php
+$response = $client->visaWalletCreateVirtualCard(
+    string $userEmail,
+    string $firstName,
+    string $lastName
+): array
+```
+
+**Parameters:**
+- `$userEmail` (string): User's email address
+- `$firstName` (string): Cardholder first name
+- `$lastName` (string): Cardholder last name
+
+**Response:**
+```json
+{
+    "code": 201,
+    "status": "success",
+    "message": "Digital Wallet Visa card created successfully",
+    "data": {
+        "id": "cmmuuky2s003bc801b5888lzl",
+        "cardName": "John Doe",
+        "last4Digits": "8091",
+        "currencyCode": "USD",
+        "balance": "0.00",
+        "paymentSystem": "VISA",
+        "status": "ACTIVE",
+        "expiresAt": "02/29",
+        "createdAt": "2026-03-17T16:49:32.548Z"
+    }
+}
+```
+
+**Example:**
+```php
+$response = $client->visaWalletCreateVirtualCard(
+    'user@example.com',
+    'John',
+    'Doe'
+);
+```
+
+---
+
+### Get All Digital Visa Wallet Cards
+
+```php
+$response = $client->visaWalletGetAllCards(string $userEmail): array
+```
+
+**Parameters:**
+- `$userEmail` (string): User's email address
+
+**Response:**
+```json
+{
+    "code": 200,
+    "status": "success",
+    "message": "Cards fetched successfully",
+    "data": [
+        {
+            "cardid": "cmmuubi0l0039c801j9my06s7",
+            "nameoncard": "John Doe",
+            "lastfour": "9523",
+            "brand": "digitalvisa",
+            "type": "virtual"
+        }
+    ]
+}
+```
+
+---
+
+### Get Specific Digital Visa Wallet Card
+
+```php
+$response = $client->visaWalletGetCard(
+    string $userEmail,
+    string $cardId
+): array
+```
+
+**Parameters:**
+- `$userEmail` (string): User's email address
+- `$cardId` (string): Card ID
+
+**Response includes:**
+- Full card number
+- Expiry month and year
+- CVV
+- Current balance
+- Transaction history
+- Card status
+
+**Response:**
+```json
+{
+    "code": 200,
+    "status": "success",
+    "message": "Card details fetched",
+    "data": {
+        "cardid": "cmmuubi0l0039c801j9my06s7",
+        "nameoncard": "John Doe",
+        "card_number": "4443635004479523",
+        "type": "virtual",
+        "brand": "digitalvisa",
+        "status": "ACTIVE",
+        "expiry_year": "29",
+        "expiry_month": "02",
+        "cvv": "433",
+        "useremail": "user@example.com",
+        "balance": "0.00",
+        "isaddon": 0,
+        "transactions": {
+            "data": [],
+            "total": 0,
+            "page": 1,
+            "per_page": 100,
+            "totalPages": 0
+        }
+    }
+}
+```
+
+---
+
+### Fund Digital Visa Wallet Card
+
+```php
+$response = $client->visaWalletFundCard(
+    string $userEmail,
+    string $cardId,
+    float|string $amount
+): array
+```
+
+**Parameters:**
+- `$userEmail` (string): User's email address
+- `$cardId` (string): Card ID
+- `$amount` (float|string): Amount to fund — **minimum $5.00**
+
+**Example:**
+```php
+$response = $client->visaWalletFundCard(
+    'user@example.com',
+    'cmmuubi0l0039c801j9my06s7',
+    50.00
+);
+```
+
+---
+
+### Get OTP for GPay / Apple Pay Provisioning
+
+```php
+$response = $client->visaWalletGetOTP(
+    string $userEmail,
+    string $cardId
+): array
+```
+
+When the user adds their card manually to Google Pay or Apple Pay, they are asked to verify via Email OTP. Use this endpoint to retrieve that OTP and deliver it to your user (via email or on-screen display).
+
+**Parameters:**
+- `$userEmail` (string): User's email address
+- `$cardId` (string): Card ID
+
+---
+
+### Block Digital Visa Wallet Card
+
+```php
+$response = $client->visaWalletBlockCard(
+    string $userEmail,
+    string $cardId
+): array
+```
+
+Temporarily freezes the card. Can be unblocked later.
+
+---
+
+### Unblock Digital Visa Wallet Card
+
+```php
+$response = $client->visaWalletUnblockCard(
+    string $userEmail,
+    string $cardId
+): array
+```
+
+Reactivates a previously blocked card.
+
+---
+
 ## Administrator Operations
 
 Admin methods retrieve account-wide data without requiring user email.

@@ -653,6 +653,140 @@ class BSICardsClient
     }
 
     // ========================
+    // DIGITAL VISA WALLET CARDS
+    // ========================
+
+    /**
+     * Create a new Digital Visa Wallet virtual card
+     *
+     * The card issuance fee and minimum funding of $5 will be deducted from
+     * Digital Visa issuing and Digital fund balances respectively.
+     *
+     * @param string $userEmail User email
+     * @param string $firstName First name
+     * @param string $lastName Last name
+     *
+     * @return array API response
+     * @throws APIException
+     */
+    public function visaWalletCreateVirtualCard(string $userEmail, string $firstName, string $lastName): array
+    {
+        return $this->post('digital-wallet-visa/create-card', [
+            'useremail' => $userEmail,
+            'firstname' => $firstName,
+            'lastname'  => $lastName,
+        ]);
+    }
+
+    /**
+     * Get all Digital Visa Wallet cards for a user
+     *
+     * @param string $userEmail User email
+     *
+     * @return array API response
+     * @throws APIException
+     */
+    public function visaWalletGetAllCards(string $userEmail): array
+    {
+        return $this->post('digital-wallet-visa/get-all-cards', [
+            'useremail' => $userEmail,
+        ]);
+    }
+
+    /**
+     * Get a specific Digital Visa Wallet card with full details
+     *
+     * @param string $userEmail User email
+     * @param string $cardId Card ID
+     *
+     * @return array API response
+     * @throws APIException
+     */
+    public function visaWalletGetCard(string $userEmail, string $cardId): array
+    {
+        return $this->post('digital-wallet-visa/get-card', [
+            'useremail' => $userEmail,
+            'cardid'    => $cardId,
+        ]);
+    }
+
+    /**
+     * Fund a Digital Visa Wallet card
+     *
+     * Minimum load amount is $5.00.
+     *
+     * @param string     $userEmail User email
+     * @param string     $cardId    Card ID
+     * @param float|string $amount  Amount to fund (minimum $5.00)
+     *
+     * @return array API response
+     * @throws APIException
+     */
+    public function visaWalletFundCard(string $userEmail, string $cardId, $amount): array
+    {
+        return $this->post('digital-wallet-visa/fund-card', [
+            'useremail' => $userEmail,
+            'cardid'    => $cardId,
+            'amount'    => $amount,
+        ]);
+    }
+
+    /**
+     * Retrieve the OTP for Digital Visa Wallet card provisioning (GPay / Apple Pay)
+     *
+     * When the user adds their card manually to GPay/Apple Pay for verification
+     * they need to select Email OTP. This endpoint retrieves the OTP so you can
+     * send it by email within your application or display it on screen.
+     *
+     * @param string $userEmail User email
+     * @param string $cardId Card ID
+     *
+     * @return array API response
+     * @throws APIException
+     */
+    public function visaWalletGetOTP(string $userEmail, string $cardId): array
+    {
+        return $this->post('digital-wallet-visa/get-otp', [
+            'useremail' => $userEmail,
+            'cardid'    => $cardId,
+        ]);
+    }
+
+    /**
+     * Block (freeze) a Digital Visa Wallet card
+     *
+     * @param string $userEmail User email
+     * @param string $cardId Card ID
+     *
+     * @return array API response
+     * @throws APIException
+     */
+    public function visaWalletBlockCard(string $userEmail, string $cardId): array
+    {
+        return $this->post('digital-wallet-visa/block-card', [
+            'useremail' => $userEmail,
+            'cardid'    => $cardId,
+        ]);
+    }
+
+    /**
+     * Unblock (unfreeze) a Digital Visa Wallet card
+     *
+     * @param string $userEmail User email
+     * @param string $cardId Card ID
+     *
+     * @return array API response
+     * @throws APIException
+     */
+    public function visaWalletUnblockCard(string $userEmail, string $cardId): array
+    {
+        return $this->post('digital-wallet-visa/unblock-card', [
+            'useremail' => $userEmail,
+            'cardid'    => $cardId,
+        ]);
+    }
+
+    // ========================
     // ADMINISTRATOR METHODS
     // ========================
 

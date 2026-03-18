@@ -15,11 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-
         $this->call([
             // PluginSeeder::class,
             // AdminSeeder::class,
             PermissionSeeder::class,
+            DigitalVisaCardNavigationSeeder::class,
             // GatewaySeeder::class,
             // UserNavigationSeeder::class,
             // CronJobSeeder::class,

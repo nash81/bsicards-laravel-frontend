@@ -98,6 +98,14 @@ Route::group(['middleware' => ['auth', '2fa', 'isActive', setting('otp_verificat
     Route::get('/approve3ds/{id}/{eventid}', [VirtualCardController::class, 'approve3ds'])->name('approve3ds');
     Route::get('/checkstatus/{id}', [VirtualCardController::class, 'checkstatus'])->name('checkstatus');
 
+    //BSICards Digital Visa Cards
+    Route::get('/digitalvisacards', [VirtualCardController::class, 'digitalvisavirtual'])->name('digitalvisavirtual');
+    Route::post('/digitalvisacards/new', [VirtualCardController::class, 'digitalvisavirtualnew'])->name('digitalvisavirtualnew');
+    Route::post('/digitalvisacards/fund', [VirtualCardController::class, 'digitalvisavirtualloadfunds'])->name('digitalvisavirtualloadfunds');
+    Route::get('/digitalvisacards/{id}/block', [VirtualCardController::class, 'digitalvisavirtualblock'])->name('digitalvisavirtualblock');
+    Route::get('/digitalvisacards/{id}/unblock', [VirtualCardController::class, 'digitalvisavirtualunblock'])->name('digitalvisavirtualunblock');
+    Route::get('/digitalvisacards/{id}', [VirtualCardController::class, 'digitalvisavirtualview'])->name('digitalvisavirtualview');
+
     Route::get('/checkotp/{id}', [VirtualCardController::class, 'checkotp'])->name('checkotp');
 
     // Deposit

@@ -137,6 +137,25 @@ The seeder is idempotent, so you can run it again later and it will update the e
 
 If you are on shared hosting without terminal access, run the command once anywhere you do have Artisan access before deploying the updated database, or seed it locally and migrate the resulting record.
 
+## 8) Install only the Digital Visa navigation seed (optional)
+
+If you only want to add/update the **Digital VisaCard** item in the `user_navigations` table, run:
+
+```bash
+php artisan db:seed --class=Database\\Seeders\\DigitalVisaCardNavigationSeeder
+```
+
+This will insert or update:
+
+- `icon`: `credit-card`
+- `url`: `user/digitalvisacards`
+- `type`: `card`
+- `name`: `Digital VisaCard`
+- `position`: `2`
+- `translation`: `null`
+
+The seeder is idempotent, so running it multiple times will update the same navigation record instead of creating duplicates.
+
 ## Troubleshooting
 
 ### Database connection failed

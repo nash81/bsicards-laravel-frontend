@@ -2292,7 +2292,8 @@ INSERT INTO `user_navigations` (`id`, `icon`, `url`, `type`, `name`, `position`,
 (15, 'log-out', '', 'logout', 'Logout', 16, NULL, NULL, NULL),
 (16, 'credit-card', 'user/mastervirtual', 'card', 'MasterCard', 2, NULL, NULL, '2024-05-13 10:47:22'),
 (17, 'credit-card', 'user/visavirtual', 'card', 'VisaCard', 2, NULL, NULL, '2024-05-13 10:47:22'),
-(18, 'credit-card', 'user/getalldigital', 'card', 'Digital MasterCard', 2, NULL, NULL, '2024-05-13 10:47:22');
+(18, 'credit-card', 'user/getalldigital', 'card', 'Digital MasterCard', 2, NULL, NULL, '2024-05-13 10:47:22'),
+(19, 'credit-card', 'user/digitalvisacards', 'card', 'Digital VisaCard', 2, NULL, NULL, '2024-05-13 10:47:22');
 
 -- --------------------------------------------------------
 
@@ -3250,7 +3251,7 @@ ALTER TABLE `user_kycs`
 -- AUTO_INCREMENT for table `user_navigations`
 --
 ALTER TABLE `user_navigations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `wire_transfars`

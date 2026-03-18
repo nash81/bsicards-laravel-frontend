@@ -227,6 +227,104 @@ $redeem = $client->digitalRedeemPoints(
 echo "Redemption Status: " . $redeem['message'];
 ```
 
+## Digital Visa Wallet Examples
+
+Virtual Visa cards that support 3DS auto-approve, Google Pay, and Apple Pay.
+
+### Create a Virtual Visa Wallet Card
+
+```php
+try {
+    $response = $client->visaWalletCreateVirtualCard(
+        'user@example.com',
+        'John',
+        'Doe'
+    );
+
+    if ($response['status'] === 'success') {
+        $card = $response['data'];
+        echo "Card Created: " . $card['cardName'];
+        echo "Last 4 Digits: " . $card['last4Digits'];
+        echo "Status: " . $card['status'];
+        echo "Expires: " . $card['expiresAt'];
+    }
+} catch (APIException $e) {
+    echo "Error: " . $e->getMessage();
+}
+```
+
+### Get All Digital Visa Wallet Cards
+
+```php
+$response = $client->visaWalletGetAllCards('user@example.com');
+
+if (!empty($response['data'])) {
+    foreach ($response['data'] as $card) {
+        echo "Card ID: " . $card['cardid'];
+        echo " | Name: " . $card['nameoncard'];
+        echo " | Last 4: " . $card['lastfour'];
+        echo " | Brand: " . $card['brand'] . "\n";
+    }
+}
+```
+
+### Get Specific Card Details
+
+```php
+$response = $client->visaWalletGetCard(
+    'user@example.com',
+    'cmmuubi0l0039c801j9my06s7'
+);
+
+$card = $response['data'];
+echo "Card Number: " . $card['card_number'];
+echo "Expiry: " . $card['expiry_month'] . "/" . $card['expiry_year'];
+echo "CVV: " . $card['cvv'];
+echo "Balance: $" . $card['balance'];
+echo "Status: " . $card['status'];
+```
+
+### Fund a Digital Visa Wallet Card
+
+```php
+$response = $client->visaWalletFundCard(
+    'user@example.com',
+    'cmmuubi0l0039c801j9my06s7',
+    50.00   // Minimum $5.00
+);
+
+echo "Funding Status: " . $response['message'];
+```
+
+### Retrieve OTP for GPay / Apple Pay
+
+```php
+// User is adding the card to Google Pay or Apple Pay manually.
+// They select "Email OTP" as the verification method.
+// Retrieve the OTP and send it to the user.
+
+$response = $client->visaWalletGetOTP(
+    'user@example.com',
+    'cmmuubi0l0039c801j9my06s7'
+);
+
+if ($response['code'] === 200) {
+    $otp = $response['data']['otp'] ?? null;
+    // Send $otp to the user via your own email/SMS service
+    echo "OTP retrieved successfully";
+}
+```
+
+### Block and Unblock a Card
+
+```php
+// Block the card
+$client->visaWalletBlockCard('user@example.com', 'cmmuubi0l0039c801j9my06s7');
+
+// Later, unblock it
+$client->visaWalletUnblockCard('user@example.com', 'cmmuubi0l0039c801j9my06s7');
+```
+
 ## Laravel Examples
 
 ### Using Dependency Injection in Controllers

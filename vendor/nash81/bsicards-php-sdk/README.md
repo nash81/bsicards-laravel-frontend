@@ -11,6 +11,7 @@ A comprehensive PHP SDK for integrating with the BSICARDS Card Issuance API. Cre
 - ✅ **MasterCard Issuance** - Create and manage MasterCards
 - ✅ **Visa Card Issuance** - Create and manage Visa Cards
 - ✅ **Digital Wallet Cards** - Create and manage Digital Wallet cards
+- ✅ **Digital Visa Wallet Cards** - Virtual Visa cards with GPay/Apple Pay & 3DS auto-approve
 - ✅ **Card Management** - Freeze, unfreeze, change PIN, view transactions
 - ✅ **Card Funding** - Fund cards with minimum $10.00
 - ✅ **Transaction History** - View detailed transaction records
@@ -28,6 +29,14 @@ A comprehensive PHP SDK for integrating with the BSICARDS Card Issuance API. Cre
 ## Installation
 
 ### Via Composer
+
+```bash
+composer require nash81/bsicards-php-sdk:^1.0
+```
+
+This package now publishes stable semantic version tags. The first stable release is `v1.0.0`, so Composer can resolve it normally without lowering your project's stability settings.
+
+If you prefer, installing without an explicit constraint will also resolve the latest stable release:
 
 ```bash
 composer require nash81/bsicards-php-sdk
@@ -238,6 +247,31 @@ $client->digitalCreateAddonCard($email, $cardId);
 // Loyalty points
 $client->digitalGetLoyaltyPoints($email, $cardId);
 $client->digitalRedeemPoints($email, $cardId);
+```
+
+### Digital Visa Wallet Operations
+
+Virtual Visa cards with 3DS auto-approve, Google Pay, and Apple Pay support.
+
+```php
+// Create a virtual Visa wallet card (minimum $5 funding deducted on creation)
+$client->visaWalletCreateVirtualCard($email, $firstName, $lastName);
+
+// Get all Visa wallet cards
+$client->visaWalletGetAllCards($email);
+
+// Get specific card details (includes full card number, CVV, transactions)
+$client->visaWalletGetCard($email, $cardId);
+
+// Fund card (minimum $5.00)
+$client->visaWalletFundCard($email, $cardId, '50.00');
+
+// Get OTP for GPay / Apple Pay provisioning
+$client->visaWalletGetOTP($email, $cardId);
+
+// Block / Unblock card
+$client->visaWalletBlockCard($email, $cardId);
+$client->visaWalletUnblockCard($email, $cardId);
 ```
 
 ### Administrator Operations
