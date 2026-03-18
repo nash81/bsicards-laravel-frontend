@@ -225,6 +225,46 @@ class CardService {
     return data;
   }
 
+  // ── Digital Visa Wallet ─────────────────────────────────────────────
+  static Future<List<VirtualCard>> getDigitalVisaCards() async {
+    final data = await ApiService.get(AppConfig.digitalVisaCardsEndpoint);
+    return _parseCardList(data['cards'], 'digital_visa');
+  }
+
+  static Future<Map<String, dynamic>> getDigitalVisaCardDetail(String cardId) async {
+    final data = await ApiService.get('${AppConfig.digitalVisaCardsEndpoint}/$cardId');
+    final cardJson = _parseCardDetail(data);
+    return {
+      'card': cardJson != null
+          ? VirtualCard.fromJson(cardJson, type: 'digital_visa')
+          : null,
+      'transactions': _parseTransactions(data['transactions']),
+    };
+  }
+
+  static Future<Map<String, dynamic>> applyDigitalVisaCard() async {
+    return ApiService.post(AppConfig.digitalVisaApplyEndpoint);
+  }
+
+  static Future<void> digitalVisaLoadFunds(String cardId, double amount) async {
+    await ApiService.post(
+      '${AppConfig.digitalVisaCardsEndpoint}/load',
+      body: {'cardid': cardId, 'amount': amount},
+    );
+  }
+
+  static Future<void> digitalVisaBlockCard(String cardId) async =>
+      ApiService.post('${AppConfig.digitalVisaCardsEndpoint}/$cardId/block');
+
+  static Future<void> digitalVisaUnblockCard(String cardId) async =>
+      ApiService.post('${AppConfig.digitalVisaCardsEndpoint}/$cardId/unblock');
+
+  static Future<Map<String, dynamic>> getDigitalVisaWalletOtp(String cardId) async {
+    final data =
+        await ApiService.get('${AppConfig.digitalVisaCardsEndpoint}/$cardId/wallet-otp');
+    return data;
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────
   static List<VirtualCard> _parseCardList(dynamic raw, String type) {
     if (raw == null) return [];

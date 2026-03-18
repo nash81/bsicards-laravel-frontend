@@ -213,7 +213,7 @@ class CardWidget extends StatelessWidget {
   }
 
   Widget _cardTypeBadge(BuildContext context) {
-    final label = card.cardType == 'visa'
+    final label = (card.cardType == 'visa' || card.cardType == 'digital_visa')
         ? context.tr('visa').toUpperCase()
         : card.cardType == 'master'
             ? context.tr('mastercard').toUpperCase()
@@ -236,7 +236,7 @@ class CardWidget extends StatelessWidget {
   }
 
   Widget _networkLogo() {
-    if (card.cardType == 'visa') {
+    if (card.cardType == 'visa' || card.cardType == 'digital_visa') {
       return const Text('VISA',
           style: TextStyle(
               color: Colors.white,

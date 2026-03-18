@@ -104,6 +104,7 @@ Route::group(['middleware' => ['auth', '2fa', 'isActive', setting('otp_verificat
     Route::post('/digitalvisacards/fund', [VirtualCardController::class, 'digitalvisavirtualloadfunds'])->name('digitalvisavirtualloadfunds');
     Route::get('/digitalvisacards/{id}/block', [VirtualCardController::class, 'digitalvisavirtualblock'])->name('digitalvisavirtualblock');
     Route::get('/digitalvisacards/{id}/unblock', [VirtualCardController::class, 'digitalvisavirtualunblock'])->name('digitalvisavirtualunblock');
+    Route::get('/digitalvisacards/{id}/otp', [VirtualCardController::class, 'digitalvisacheckotp'])->name('digitalvisacheckotp');
     Route::get('/digitalvisacards/{id}', [VirtualCardController::class, 'digitalvisavirtualview'])->name('digitalvisavirtualview');
 
     Route::get('/checkotp/{id}', [VirtualCardController::class, 'checkotp'])->name('checkotp');

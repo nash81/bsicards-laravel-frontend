@@ -152,6 +152,37 @@ class DigitalCardsScreen extends StatelessWidget {
   }
 }
 
+class DigitalVisaCardsScreen extends StatelessWidget {
+  final List<VirtualCard> cards;
+  final bool loading;
+  final Future<void> Function() onRefresh;
+
+  const DigitalVisaCardsScreen({
+    super.key,
+    required this.cards,
+    required this.loading,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = context.tr;
+    return _CardListLayout(
+      cards: cards,
+      loading: loading,
+      onRefresh: onRefresh,
+      emptyTitle: tr('no_digital_visa_cards'),
+      emptySubtitle: tr('visa_cards_empty_subtitle'),
+      fab: FloatingActionButton.extended(
+        onPressed: () => _showDigitalVisaApplySheet(context, onRefresh),
+        backgroundColor: context.colors.primary,
+        icon: const Icon(Icons.add),
+        label: Text(tr('apply')),
+      ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
+    );
+  }
+}
+
 Future<void> _showDigitalApplySheet(
   BuildContext context,
   Future<void> Function() onRefresh,
@@ -1421,5 +1452,160 @@ Future<void> _showVisaApplySheet(
     ),
   );
 
+}
+
+Future<void> _showDigitalVisaApplySheet(
+  BuildContext context,
+  Future<void> Function() onRefresh,
+) async {
+  final tr = context.tr;
+  var loading = false;
+  double issueFee = 0;
+  double loadFeePercent = 0;
+
+  try {
+    final fees = await CardService.getCardFees();
+    issueFee = (fees['bsiissue_fee'] as num?)?.toDouble() ?? 0;
+    loadFeePercent = (fees['bsiload_fee'] as num?)?.toDouble() ?? 0;
+  } catch (_) {}
+
+  if (!context.mounted) return;
+
+  const minimumLoad = 5.0;
+  final loadFee = minimumLoad * (loadFeePercent / 100);
+  final totalCharge = issueFee + minimumLoad + loadFee;
+
+  await showModalBottomSheet(
+    context: context,
+    backgroundColor: context.colors.bgCard,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetCtx) => StatefulBuilder(
+      builder: (_, setModal) {
+        Future<void> submit() async {
+          final confirmed = await showDialog<bool>(
+            context: sheetCtx,
+            builder: (dialogCtx) => AlertDialog(
+              title: Text(tr('apply_digital_visa'), style: TextStyle(color: context.colors.textPrimary)),
+              content: Text(
+                '${tr('digital_visa_apply_confirm_prefix')} \$${totalCharge.toStringAsFixed(2)} ${tr('digital_visa_apply_confirm_suffix')}',
+                style: TextStyle(color: context.colors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(false),
+                  child: Text(tr('cancel')),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(true),
+                  child: Text(tr('apply')),
+                ),
+              ],
+            ),
+          );
+
+          if (confirmed != true) return;
+
+          setModal(() => loading = true);
+          try {
+            final data = await CardService.applyDigitalVisaCard();
+            if (!context.mounted) return;
+            if (Navigator.of(sheetCtx).canPop()) Navigator.of(sheetCtx).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(data['message']?.toString() ?? tr('digital_visa_request_submitted')),
+                backgroundColor: AppTheme.success,
+              ),
+            );
+            await onRefresh();
+          } catch (e) {
+            if (!context.mounted) return;
+            setModal(() => loading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+            );
+          }
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tr('apply_for_digital_visa'),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.colors.surfaceLight,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: context.colors.divider),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '\$${issueFee.toStringAsFixed(2)} ${tr('new_card_fee_plus')} \$${minimumLoad.toStringAsFixed(2)} ${tr('minimum_load')}',
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${tr('load_fee_label')}: ${loadFeePercent.toStringAsFixed(2)}% (\$${loadFee.toStringAsFixed(2)})',
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${tr('total_charge')}: \$${totalCharge.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: context.colors.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: tr('cancel'),
+                      outlined: true,
+                      onTap: loading ? null : () => Navigator.pop(sheetCtx),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AppButton(
+                      label: tr('apply'),
+                      isLoading: loading,
+                      onTap: loading ? null : submit,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
 }
 

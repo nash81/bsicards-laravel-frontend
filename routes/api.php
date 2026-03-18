@@ -126,6 +126,17 @@ Route::prefix('v1')->group(function () {
             Route::get('{cardId}/wallet-otp',     [CardController::class, 'checkWalletOtp']);
         });
 
+        // Virtual Cards – Digital Visa Wallet
+        Route::prefix('cards/digital-visa')->group(function () {
+            Route::get('/',                        [CardController::class, 'digitalVisaList']);
+            Route::post('apply',                   [CardController::class, 'digitalVisaApply']);
+            Route::get('{cardId}',                 [CardController::class, 'digitalVisaView']);
+            Route::post('load',                    [CardController::class, 'digitalVisaLoadFunds']);
+            Route::post('{cardId}/block',          [CardController::class, 'digitalVisaBlock']);
+            Route::post('{cardId}/unblock',        [CardController::class, 'digitalVisaUnblock']);
+            Route::get('{cardId}/wallet-otp',      [CardController::class, 'digitalVisaWalletOtp']);
+        });
+
     });
 
 });

@@ -17,6 +17,7 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tab;
   List<VirtualCard> _digital = [];
+  List<VirtualCard> _digitalVisa = [];
   List<VirtualCard> _master  = [];
   List<VirtualCard> _visa    = [];
   List<Map<String, dynamic>> _masterPending = [];
@@ -26,12 +27,19 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 3, vsync: this);
+    _tab = TabController(length: 4, vsync: this);
+    _tab.addListener(_handleTabChange);
     _loadCards();
+  }
+
+  void _handleTabChange() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _tab.removeListener(_handleTabChange);
     _tab.dispose();
     super.dispose();
   }
@@ -42,19 +50,21 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
     try {
       final results = await Future.wait([
         CardService.getDigitalCards(),
+        CardService.getDigitalVisaCards(),
         CardService.getMasterCards(),
         CardService.getVisaCards(),
       ]);
       if (mounted) {
         setState(() {
           _digital = results[0] as List<VirtualCard>;
-          final masterData = results[1] as Map<String, dynamic>;
+          _digitalVisa = results[1] as List<VirtualCard>;
+          final masterData = results[2] as Map<String, dynamic>;
           _master = masterData['cards'] as List<VirtualCard>;
           _masterPending = (masterData['pending'] as List?)
                   ?.whereType<Map<String, dynamic>>()
                   .toList() ??
               [];
-          final visaData = results[2] as Map<String, dynamic>;
+          final visaData = results[3] as Map<String, dynamic>;
           _visa = visaData['cards'] as List<VirtualCard>;
           _visaPending = (visaData['pending'] as List?)
                   ?.whereType<Map<String, dynamic>>()
@@ -74,6 +84,7 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
     final tr = context.tr;
     final isInitialLoading = _loading &&
         _digital.isEmpty &&
+        _digitalVisa.isEmpty &&
         _master.isEmpty &&
         _visa.isEmpty &&
         _masterPending.isEmpty &&
@@ -85,14 +96,15 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
         title: Text(tr('my_cards')),
         bottom: TabBar(
           controller: _tab,
-          indicatorColor: context.colors.primary,
-          labelColor: context.colors.primary,
-          unselectedLabelColor: context.colors.textSecondary,
-          indicatorWeight: 3,
+          isScrollable: true,
+          indicatorColor: Colors.transparent,
+          dividerColor: Colors.transparent,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           tabs: [
-            Tab(text: tr('digital')),
-            Tab(text: tr('mastercard')),
-            Tab(text: tr('visa')),
+            _buildTabBadge('Digital Master', 0),
+            _buildTabBadge('Digital Visa', 1),
+            _buildTabBadge('MasterCard', 2),
+            _buildTabBadge('VisaCard', 3),
           ],
         ),
       ),
@@ -111,6 +123,11 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
               controller: _tab,
               children: [
                 DigitalCardsScreen(cards: _digital, loading: _loading, onRefresh: _loadCards),
+                DigitalVisaCardsScreen(
+                  cards: _digitalVisa,
+                  loading: _loading,
+                  onRefresh: _loadCards,
+                ),
                 MasterCardsScreen(
                   cards: _master,
                   pending: _masterPending,
@@ -125,6 +142,32 @@ class _CardsHomeScreenState extends State<CardsHomeScreen>
                 ),
               ],
             ),
+    );
+  }
+
+  Tab _buildTabBadge(String label, int index) {
+    final colors = context.colors;
+    final isSelected = _tab.index == index;
+
+    return Tab(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? colors.primary.withValues(alpha: 0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: isSelected ? colors.primary : colors.divider,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? colors.primary : colors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 13,
+          ),
+        ),
+      ),
     );
   }
 }

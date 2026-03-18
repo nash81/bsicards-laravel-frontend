@@ -366,7 +366,9 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                     AppButton(
                       label: context.tr('withdraw'),
                       isLoading: _submitting,
-                      onTap: _submitWithdraw,
+                      onTap: (double.tryParse(_amountCtrl.text.trim()) ?? 0) >= 5
+                          ? _submitWithdraw
+                          : null,
                       icon: Icons.call_made_rounded,
                     ),
                   ],

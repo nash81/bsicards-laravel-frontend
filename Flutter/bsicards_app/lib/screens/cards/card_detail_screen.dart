@@ -31,6 +31,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   bool _loadingFunds = false;
   bool _loadingToggle = false;
   bool _loading3ds = false;
+  bool _loadingOtp = false;
   bool _loadingAddonAction = false;
   String? _openingAddonCardId;
   _DigitalDetailTab _digitalTab = _DigitalDetailTab.transactions;
@@ -63,6 +64,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           break;
         case 'visa':
           data = await CardService.getVisaCardDetail(widget.card.cardId);
+          break;
+        case 'digital_visa':
+          data = await CardService.getDigitalVisaCardDetail(widget.card.cardId);
           break;
         default:
           data = await CardService.getDigitalCardDetail(widget.card.cardId);
@@ -101,6 +105,17 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   Future<void> _loadFunds() async {
     final amount = double.tryParse(_amountCtrl.text);
     if (amount == null || amount <= 0) return;
+    if (widget.card.cardType == 'digital_visa' && amount < 5) {
+      Fluttertoast.showToast(
+        msg: 'Minimum amount of deposit is \$5',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        backgroundColor: AppTheme.error,
+        textColor: Colors.white,
+        fontSize: 13,
+      );
+      return;
+    }
 
     try {
       switch (widget.card.cardType) {
@@ -109,6 +124,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           break;
         case 'visa':
           await CardService.visaLoadFunds(widget.card.cardId, amount);
+          break;
+        case 'digital_visa':
+          await CardService.digitalVisaLoadFunds(widget.card.cardId, amount);
           break;
         default:
           await CardService.digitalLoadFunds(widget.card.cardId, amount);
@@ -141,6 +159,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             await CardService.visaUnblockCard(card.cardId);
           } else {
             await CardService.visaBlockCard(card.cardId);
+          }
+          break;
+        case 'digital_visa':
+          if (card.isBlocked) {
+            await CardService.digitalVisaUnblockCard(card.cardId);
+          } else {
+            await CardService.digitalVisaBlockCard(card.cardId);
           }
           break;
         default:
@@ -324,6 +349,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             if (sheetCtx.mounted) setSheetState(() => sheetLoading = false);
           }
 
+          final parsedAmount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
+          final isDigitalVisa = widget.card.cardType == 'digital_visa';
+          final isAmountValid = !isDigitalVisa || parsedAmount >= 5;
+
           return Padding(
             padding: EdgeInsets.only(
               left: 24, right: 24, top: 24,
@@ -397,6 +426,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   const SizedBox(height: 16),
                   AppButton(label: context.tr('close'), outlined: true, onTap: () => Navigator.pop(context)),
                 ] else ...[
+
                   Text(
                     '${context.tr('fund_loading_fee_of')} ${((loadFee ?? 0)).toStringAsFixed(2)}% ${context.tr('will_be_charged')}',
                     style: TextStyle(color: colors.textSecondary, fontSize: 13),
@@ -408,12 +438,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     controller: _amountCtrl,
                     prefixIcon: Icons.attach_money,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    onChanged: (_) => setSheetState(() {}),
                   ),
+                  if (isDigitalVisa) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Minimum amount of deposit is \$5',
+                      style: TextStyle(
+                        color: isAmountValid ? colors.textSecondary : AppTheme.error,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   AppButton(
                     label: context.tr('load_funds'),
                     isLoading: sheetLoading,
-                    onTap: sheetLoading ? null : doLoad,
+                    onTap: (sheetLoading || !isAmountValid) ? null : doLoad,
                   ),
                 ],
               ],
@@ -574,7 +615,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       child: Scaffold(
         backgroundColor: context.colors.bgDark,
         appBar: AppBar(
-          title: Text('${card.cardType == 'visa' ? tr('visa') : card.cardType == 'master' ? tr('mastercard') : tr('digital')} ${tr('card')}'),
+          title: Text('${card.cardType == 'digital_visa' ? tr('digital_visa') : card.cardType == 'visa' ? tr('visa') : card.cardType == 'master' ? tr('mastercard') : tr('digital')} ${tr('card')}'),
           actions: [
             if (card.cardType == 'digital' && card.isAddon != true)
               IconButton(
@@ -641,6 +682,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         isLoading: _loadingFunds,
         onTap: _loadingFunds ? () {} : () => _showLoadFundsSheet(),
       ),
+      if (card.cardType == 'digital_visa')
+        _ActionBtn(
+          icon: Icons.qr_code_2,
+          label: context.tr('wallet_otp'),
+          color: const Color(0xFF7C4DFF),
+          isLoading: _loadingOtp,
+          onTap: _loadingOtp ? () {} : _fetchWalletOtp,
+        ),
       _ActionBtn(
         icon: card.isBlocked ? Icons.lock_open : Icons.lock,
         label: card.isBlocked ? context.tr('unblock') : context.tr('block'),
@@ -701,6 +750,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             'load',
             'topup',
           ].contains(type);
+          final direction = (t['direction'] ?? '').toString().toLowerCase();
+          final resolvedIsCredit = isCredit || direction == 'incoming';
           final status = (t['status'] ?? '').toString().toLowerCase();
           final narrative =
               (t['narrative'] ??
@@ -737,8 +788,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           final merchantLogo = _txMerchantLogo(t);
           final category = _txCategory(t);
 
-          final amountColor = isCredit ? AppTheme.income : AppTheme.expense;
-          final signedAmount = '${isCredit ? '+' : '-'}$currency ${amount.toStringAsFixed(2)}';
+          final amountColor = resolvedIsCredit ? AppTheme.income : AppTheme.expense;
+          final signedAmount = '${resolvedIsCredit ? '+' : '-'}$currency ${amount.toStringAsFixed(2)}';
           final statusText = [
             if (status.isNotEmpty) status[0].toUpperCase() + status.substring(1),
             if ((t['declineReason'] ?? '').toString().isNotEmpty)
@@ -763,7 +814,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         merchantLogo,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Icon(
-                          isCredit
+                          resolvedIsCredit
                               ? Icons.south_west_rounded
                               : Icons.north_east_rounded,
                           color: amountColor,
@@ -772,7 +823,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       ),
                     )
                   : Icon(
-                      isCredit
+                      resolvedIsCredit
                           ? Icons.south_west_rounded
                           : Icons.north_east_rounded,
                       color: amountColor,
@@ -1324,6 +1375,31 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     );
   }
 
+  Future<void> _fetchWalletOtp() async {
+    if (_loadingOtp) return;
+    setState(() => _loadingOtp = true);
+    try {
+      final data = widget.card.cardType == 'digital_visa'
+          ? await CardService.getDigitalVisaWalletOtp(widget.card.cardId)
+          : await CardService.getWalletOtp(widget.card.cardId);
+
+      if (!mounted) return;
+
+      final otp = (data['data']?['otp'] ?? data['data']?['activationCode'] ?? data['data']?['code'])?.toString();
+      _showSnack(
+        (otp ?? '').isNotEmpty
+            ? '${context.tr('wallet_otp')}: $otp'
+            : context.tr('no_otp_available_yet'),
+        isError: false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(e.toString(), isError: true);
+    } finally {
+      if (mounted) setState(() => _loadingOtp = false);
+    }
+  }
+
   void _showCardMenu() {
     showModalBottomSheet(
       context: context,
@@ -1357,20 +1433,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 _showSnack(context.tr('card_number_copied'), isError: false);
               },
             ),
-            if (widget.card.cardType == 'digital')
+            if (widget.card.cardType == 'digital' || widget.card.cardType == 'digital_visa')
               ListTile(
                 leading: Icon(Icons.qr_code, color: context.colors.primary),
                 title: Text(context.tr('wallet_otp'),
                     style: TextStyle(color: context.colors.textPrimary)),
                 onTap: () async {
                   Navigator.pop(context);
-                  final data = await CardService.getWalletOtp(widget.card.cardId);
-                  if (!mounted) return;
-                  final otp = data['data']?['activationCode'];
-                  _showSnack(
-                    otp != null ? '${context.tr('wallet_otp')}: $otp' : context.tr('no_otp_available_yet'),
-                    isError: false,
-                  );
+                  await _fetchWalletOtp();
                 },
               ),
             const SizedBox(height: 8),

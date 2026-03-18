@@ -230,6 +230,44 @@ class CardController extends Controller
         return $decoded;
     }
 
+    private function isBsiSuccess($response, array $okCodes = [200]): bool
+    {
+        $code = is_array($response)
+            ? (int) ($response['code'] ?? 0)
+            : (int) data_get($response, 'code', 0);
+
+        return in_array($code, $okCodes, true);
+    }
+
+    private function bsiMessage($response, string $fallback): string
+    {
+        $message = is_array($response)
+            ? ($response['message'] ?? null)
+            : data_get($response, 'message');
+
+        return (string) ($message ?: $fallback);
+    }
+
+    private function extractDigitalVisaTransactions(array $card): array
+    {
+        $candidates = [
+            data_get($card, 'transactions.data', []),
+            data_get($card, 'transactions.items', []),
+            data_get($card, 'transactions.transactions', []),
+            data_get($card, 'transactions.cardTransactions', []),
+            data_get($card, 'transactions', []),
+        ];
+
+        foreach ($candidates as $candidate) {
+            $list = $this->normalizePayload($candidate);
+            if ($this->isSequentialArray($list)) {
+                return $list;
+            }
+        }
+
+        return [];
+    }
+
     // =======================================================
     // MASTERCARD
     // =======================================================
@@ -819,6 +857,284 @@ class CardController extends Controller
             return response()->json(['status' => true, 'message' => '3DS approved successfully.']);
         }
         return response()->json(['status' => false, 'message' => '3DS approval failed.'], 500);
+    }
+
+    // =======================================================
+    // DIGITAL VISA WALLET
+    // =======================================================
+
+    public function digitalVisaList(Request $request)
+    {
+        $user = $request->user();
+        $general = GeneralSetting::first();
+
+        $response = $this->bsiCall('digital-wallet-visa/get-all-cards', [
+            'useremail' => $user->email,
+        ], $general);
+
+        if (! $this->isBsiSuccess($response)) {
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($response, 'Error fetching Digital Visa cards.'),
+            ], 500);
+        }
+
+        $cards = $this->normalizePayload(data_get($response, 'data.cards', data_get($response, 'data', [])));
+        if (! $this->isSequentialArray($cards)) {
+            $cards = [];
+        }
+
+        return response()->json([
+            'status' => true,
+            'cards' => $cards,
+        ]);
+    }
+
+    public function digitalVisaView(Request $request, string $cardId)
+    {
+        $user = $request->user();
+        $general = GeneralSetting::first();
+
+        $response = $this->bsiCall('digital-wallet-visa/get-card', [
+            'useremail' => $user->email,
+            'cardid' => $cardId,
+        ], $general);
+
+        if (! $this->isBsiSuccess($response, [200, 201])) {
+            $code = (int) data_get($response, 'code', 500);
+            $httpCode = $code === 404 ? 404 : 500;
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($response, 'Card not found.'),
+            ], $httpCode);
+        }
+
+        $card = $this->normalizePayload(data_get($response, 'data', []));
+
+        return response()->json([
+            'status' => true,
+            'card' => $card,
+            'transactions' => $this->extractDigitalVisaTransactions($card),
+        ]);
+    }
+
+    public function digitalVisaApply(Request $request)
+    {
+        $user = $request->user();
+        $general = GeneralSetting::first();
+
+        $issueFee = (float) ($general->bsiissue_fee ?? 0);
+        $minimumLoad = 5.00;
+        $loadFee = round($minimumLoad * ((float) ($general->bsiload_fee ?? 0) / 100), 2);
+        $totalCharge = $issueFee + $minimumLoad + $loadFee;
+
+        if ((float) $user->balance <= $totalCharge) {
+            return response()->json(['status' => false, 'message' => 'Insufficient balance.'], 422);
+        }
+
+        $user->balance -= $totalCharge;
+        $user->save();
+
+        $firstName = (string) ($user->first_name ?? $user->firstname ?? '');
+        $lastName = (string) ($user->last_name ?? $user->lastname ?? '');
+        $response = $this->bsiCall('digital-wallet-visa/create-card', [
+            'useremail' => $user->email,
+            'firstname' => $firstName,
+            'lastname' => $lastName,
+        ], $general);
+
+        if (! $this->isBsiSuccess($response, [200, 201])) {
+            $user->balance += $totalCharge;
+            $user->save();
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($response, 'Error requesting new Digital Visa card.'),
+            ], 500);
+        }
+
+        $cardId = data_get($response, 'data.cardid')
+            ?? data_get($response, 'data.id')
+            ?? data_get($response, 'cardid')
+            ?? data_get($response, 'id');
+
+        if (! $cardId) {
+            $user->balance += $totalCharge;
+            $user->save();
+            return response()->json([
+                'status' => false,
+                'message' => 'Card was created but no card reference was returned for funding.',
+            ], 500);
+        }
+
+                $fundResponse = $this->bsiCall('digital-wallet-visa/fund-card', [
+                    'useremail' => $user->email,
+                    'cardid' => (string) $cardId,
+                    'amount' => $minimumLoad,
+                ], $general);
+
+        if (! $this->isBsiSuccess($fundResponse, [200, 201])) {
+            $user->balance += $totalCharge;
+            $user->save();
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($fundResponse, 'Card created but initial funding failed. Balance restored.'),
+            ], 500);
+        }
+
+        Txn::new(
+            $totalCharge,
+            $loadFee,
+            $totalCharge,
+            'BSICards',
+            'New Digital Visa card issuance fee with minimum load',
+            TxnType::Subtract,
+            TxnStatus::Success,
+            null,
+            null,
+            $user->id
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => $this->bsiMessage($response, 'New Digital Visa card created and funded successfully.'),
+            'data' => [
+                'cardid' => $cardId,
+                'charged' => $totalCharge,
+                'issue_fee' => $issueFee,
+                'minimum_load' => $minimumLoad,
+                'load_fee' => $loadFee,
+            ],
+        ]);
+    }
+
+    public function digitalVisaLoadFunds(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'cardid' => 'required|string',
+            'amount' => 'required|numeric|gt:5',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $user = $request->user();
+        $general = GeneralSetting::first();
+
+        $amount = (float) $request->amount;
+        $fee = round($amount * ((float) ($general->bsiload_fee ?? 0) / 100), 2);
+        $total = $amount + $fee;
+
+        if ((float) $user->balance <= $total) {
+            return response()->json(['status' => false, 'message' => 'Insufficient balance.'], 422);
+        }
+
+        $user->balance -= $total;
+        $user->save();
+
+        $response = $this->bsiCall('digital-wallet-visa/fund-card', [
+            'useremail' => $user->email,
+            'cardid' => (string) $request->cardid,
+            'amount' => $amount,
+        ], $general);
+
+        if (! $this->isBsiSuccess($response, [200, 201])) {
+            $user->balance += $total;
+            $user->save();
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($response, 'Fund load request failed.'),
+            ], 500);
+        }
+
+        Txn::new(
+            $total,
+            $fee,
+            $total,
+            'BSICards',
+            'Loaded funds to Digital Visa card ' . $request->cardid,
+            TxnType::Subtract,
+            TxnStatus::Success,
+            null,
+            null,
+            $user->id
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => $this->bsiMessage($response, 'Fund load request successful.'),
+        ]);
+    }
+
+    public function digitalVisaBlock(Request $request, string $cardId)
+    {
+        $user = $request->user();
+        $general = GeneralSetting::first();
+
+        $response = $this->bsiCall('digital-wallet-visa/block-card', [
+            'useremail' => $user->email,
+            'cardid' => $cardId,
+        ], $general);
+
+        if (! $this->isBsiSuccess($response, [200, 201])) {
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($response, 'Error blocking card.'),
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => $this->bsiMessage($response, 'Card block requested.'),
+        ]);
+    }
+
+    public function digitalVisaUnblock(Request $request, string $cardId)
+    {
+        $user = $request->user();
+        $general = GeneralSetting::first();
+
+        $response = $this->bsiCall('digital-wallet-visa/unblock-card', [
+            'useremail' => $user->email,
+            'cardid' => $cardId,
+        ], $general);
+
+        if (! $this->isBsiSuccess($response, [200, 201])) {
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($response, 'Error unblocking card.'),
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => $this->bsiMessage($response, 'Card unblock requested.'),
+        ]);
+    }
+
+    public function digitalVisaWalletOtp(Request $request, string $cardId)
+    {
+        $user = $request->user();
+        $general = GeneralSetting::first();
+
+        $response = $this->bsiCall('digital-wallet-visa/get-otp', [
+            'useremail' => $user->email,
+            'cardid' => $cardId,
+        ], $general);
+
+        if (! $this->isBsiSuccess($response, [200, 201])) {
+            return response()->json([
+                'status' => false,
+                'message' => $this->bsiMessage($response, 'No OTP available right now.'),
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => $this->bsiMessage($response, 'Wallet OTP fetched successfully.'),
+            'data' => data_get($response, 'data', []),
+            'event' => data_get($response, 'event'),
+            'timestamp' => data_get($response, 'timestamp'),
+        ]);
     }
 }
 

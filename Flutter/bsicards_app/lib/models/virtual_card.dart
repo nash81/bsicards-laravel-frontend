@@ -9,7 +9,7 @@ class VirtualCard {
   final String? expiryDate;
   final String? cvv;
   final String? status;
-  final String? cardType; // master | visa | digital
+  final String? cardType; // master | visa | digital | digital_visa
   final String? providerType;
   final double? balance;
   final String? billingAddress1;
@@ -147,7 +147,7 @@ class VirtualCard {
   }
 
   String get cardTypeBadgeLabel {
-    if (cardType == 'visa') return 'VISA';
+    if (cardType == 'visa' || cardType == 'digital_visa') return 'VISA';
     if (cardType == 'master') return 'MASTERCARD';
 
     // Digital cards: show Virtual-Addon or Virtual based on isaddon flag
@@ -164,7 +164,7 @@ class VirtualCard {
   }
 
   String get cardTypeTitleLabel {
-    if (cardType == 'visa') return 'Visa';
+    if (cardType == 'visa' || cardType == 'digital_visa') return 'Visa';
     if (cardType == 'master') return 'Mastercard';
 
     final provider = _asString(providerType);
@@ -189,7 +189,7 @@ class VirtualCard {
     if (normalized == null || normalized.isEmpty) {
       return false;
     }
-    if (cardType == 'digital') {
+    if (cardType == 'digital' || cardType == 'digital_visa') {
       return normalized != 'active' && normalized != 'success';
     }
     return normalized == 'blocked' || normalized == 'inactive' || normalized == 'disabled';
@@ -206,6 +206,7 @@ class VirtualCard {
   Color get cardGradientStart {
     switch (cardType) {
       case 'visa':
+      case 'digital_visa':
         return const Color(0xFF1A237E);
       case 'master':
         return const Color(0xFF1B1B2F);
@@ -217,6 +218,7 @@ class VirtualCard {
   Color get cardGradientEnd {
     switch (cardType) {
       case 'visa':
+      case 'digital_visa':
         return const Color(0xFF283593);
       case 'master':
         return const Color(0xFF374151);

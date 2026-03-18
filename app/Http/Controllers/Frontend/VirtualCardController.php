@@ -1506,9 +1506,35 @@ class VirtualCardController extends Controller {
         return back();
     }
 
+    public function digitalvisacheckotp($id) {
+        $user = auth()->user();
+        $general = GeneralSetting::first();
+
+        $html = '<div class="k">' . e(__('OTP Wallet')) . '</div>'
+            . '<div class="text-muted">' . e(__('Waiting for OTP code...')) . '</div>';
+
+        try {
+            $client = $this->getBsiSdkClient($general);
+            $response = $client->visaWalletGetOTP($user->email, (string) $id);
+
+            if ($this->isBsiSuccess($response, [200, 201])) {
+                $otp = trim((string) data_get($response, 'data.otp', ''));
+                if ($otp !== '') {
+                    $html = '<div class="k">' . e(__('OTP Wallet')) . '</div>'
+                        . '<div class="v">' . e($otp) . '</div>'
+                        . '<div class="text-muted mt-1">' . e(__('Use this OTP while adding your card to wallet.')) . '</div>';
+                }
+            }
+        } catch (APIException $e) {
+            // Keep lightweight polling response; do not toast on background polling failures.
+        }
+
+        return response($html);
+    }
+
     public function digitalvisavirtualloadfunds(Request $request) {
         $this->validate($request, [
-            'amount' => 'required|numeric|gt:0',
+            'amount' => 'required|numeric|gt:5',
             'cardid' => 'required|string',
         ]);
 

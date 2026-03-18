@@ -91,6 +91,8 @@ class AppConfig {
   static const String visaCardsEndpoint       = '/cards/visa';
   static const String visaApplyEndpoint       = '/cards/visa/apply';
   static const String digitalCardsEndpoint    = '/cards/digital';
+  static const String digitalVisaCardsEndpoint = '/cards/digital-visa';
+  static const String digitalVisaApplyEndpoint = '/cards/digital-visa/apply';
   static const String cardFeesEndpoint        = '/cards/fees';
 
   static String digitalApprove3dsEndpoint(String cardId) =>
