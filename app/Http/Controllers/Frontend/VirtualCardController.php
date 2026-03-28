@@ -1392,34 +1392,8 @@ class VirtualCardController extends Controller {
             return back();
         }
 
-        if ($this->isBsiSuccess($response, [200, 201])) {
-            $cardId = data_get($response, 'data.cardid')
-                ?? data_get($response, 'data.id')
-                ?? data_get($response, 'cardid')
-                ?? data_get($response, 'id');
 
-            if (!$cardId) {
-                $user->balance += $totalCharge;
-                $user->save();
-                notify()->error(__('Digital Visa card was created but no card reference was returned for funding.'), 'Error');
-                return back();
-            }
 
-            try {
-                $fundResponse = $client->visaWalletFundCard($user->email, (string) $cardId, $minimumLoad);
-            } catch (APIException $e) {
-                $user->balance += $totalCharge;
-                $user->save();
-                notify()->error(__('Card created but initial funding failed. Your wallet balance has been restored.'), 'Error');
-                return back();
-            }
-
-            if (!$this->isBsiSuccess($fundResponse, [200, 201])) {
-                $user->balance += $totalCharge;
-                $user->save();
-                notify()->error(__($this->bsiMessage($fundResponse, 'Card created but initial funding failed. Your wallet balance has been restored.')), 'Error');
-                return back();
-            }
 
             $transaction = new Transaction();
             $transaction->user_id = $user->id;
@@ -1434,12 +1408,7 @@ class VirtualCardController extends Controller {
 
             notify()->success(__($this->bsiMessage($response, 'New Digital Visa card created and funded successfully')), 'Success');
             return back();
-        }
 
-        $user->balance += $totalCharge;
-        $user->save();
-        notify()->error(__($this->bsiMessage($response, 'Error requesting new Digital Visa card')), 'Error');
-        return back();
     }
 
     public function digitalvisavirtualview($id) {
