@@ -1344,6 +1344,71 @@ body.modern-banking-theme {
     font-size: 0.875rem;
 }
 
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx {
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx span {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx span a {
+    color: var(--bank-primary);
+    text-decoration: none;
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx span a:hover {
+    color: var(--bank-primary-hover);
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx span:first-child {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid var(--bank-border-strong);
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx span:first-child svg {
+    position: absolute;
+    z-index: 1;
+    top: 6px;
+    left: 4px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 16px;
+    stroke-dashoffset: 16px;
+    transition: stroke-dashoffset 0.25s ease;
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx span:last-child {
+    margin-left: 8px;
+    color: #475569;
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .cbx:hover span:first-child {
+    border-color: var(--bank-primary);
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .inp-cbx:checked + .cbx span:first-child {
+    border-color: var(--bank-primary);
+    background: var(--bank-primary);
+}
+
+.modern-banking-theme .auth-contents .checkbox-wrapper-15 .inp-cbx:checked + .cbx span:first-child svg {
+    stroke-dashoffset: 0;
+}
+
 .modern-banking-theme .auth-contents .remem-for a {
     color: var(--bank-primary);
     text-decoration: none;

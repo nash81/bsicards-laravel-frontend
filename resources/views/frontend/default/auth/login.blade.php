@@ -64,7 +64,7 @@
                             <div class="inputs">
                                 <div class="remem-for">
                                     <div class="checkbox-wrapper-15">
-                                        <input class="inp-cbx" id="cbx-15" name="remember" type="checkbox"
+                                        <input class="inp-cbx" id="cbx-15" name="remember" type="checkbox" @checked(old('remember'))
                                                style="display: none;"/>
                                         <label class="cbx" for="cbx-15">
                                             <span>

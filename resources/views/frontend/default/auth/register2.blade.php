@@ -98,11 +98,11 @@
                                      data-sitekey="{{ json_decode($googleReCaptcha->data,true)['site_key'] }}">
                                 </div>
                             @endif
-                            
+
                             <div class="inputs">
                                 <div class="remem-for">
                                     <div class="checkbox-wrapper-15">
-                                        <input class="inp-cbx" id="cbx-15" type="checkbox" name="i_agree" value="yes" style="display: none;"/>
+                                        <input class="inp-cbx" id="cbx-15" type="checkbox" name="i_agree" value="yes" @checked(old('i_agree')) style="display: none;"/>
                                         <label class="cbx" for="cbx-15">
                                             <span>
                                               <svg width="12px" height="9px" viewbox="0 0 12 9">
