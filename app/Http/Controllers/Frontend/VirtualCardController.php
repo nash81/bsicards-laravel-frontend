@@ -1380,20 +1380,11 @@ class VirtualCardController extends Controller {
         $user->balance -= $totalCharge;
         $user->save();
 
-        try {
+
             $client = $this->getBsiSdkClient($general);
             $firstName = (string) ($user->first_name ?? $user->firstname ?? '');
             $lastName = (string) ($user->last_name ?? $user->lastname ?? '');
             $response = $client->visaWalletCreateVirtualCard($user->email, $firstName, $lastName);
-        } catch (APIException $e) {
-            $user->balance += $totalCharge;
-            $user->save();
-            notify()->error(__('Error issuing new Digital Visa card, Try Again Later'), 'Error');
-            return back();
-        }
-
-
-
 
             $transaction = new Transaction();
             $transaction->user_id = $user->id;
